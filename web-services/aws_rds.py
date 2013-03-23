@@ -10,7 +10,7 @@ from time import sleep
 def create_rds(conn, conn_ec2, ec2_security_group_name, db_name, db_sg_name):
 	rds_db = create_rds_db(conn, db_name)
 	create_rds_security_group(conn, conn_ec2, rds_db, ec2_security_group_name, db_sg_name)
-	return db.endpoint
+	return rds_db.endpoint
 
 
 def create_rds_db(conn, db_name):

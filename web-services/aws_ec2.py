@@ -1,18 +1,25 @@
 import boto
 import os.path
+from time import sleep
 
 def create_security_group(conn, security_group_name, description=''):
 
 	print('Creating a new security group.')
 	sg = conn.create_security_group(name=security_group_name, description='{g} security group'.format(g=security_group_name))
+	# success = conn.authorize_security_group(group_name=security_group_name, ip_protocol='tcp', 
+	# 										from_port=22, to_port=22, cidr_ip='0.0.0.0/0')
+	# if not success:
+	# 	print('Failed to add SSH access.')
+	# success = conn.authorize_security_group(group_name=security_group_name, ip_protocol='tcp', 
+	# 										from_port=80, to_port=80, cidr_ip='0.0.0.0/0')
+	# if not success:
+	# 	print('Failed to add HTTP access.')
+
 	success = conn.authorize_security_group(group_name=security_group_name, ip_protocol='tcp', 
-											from_port=22, to_port=22, cidr_ip='0.0.0.0/0')
+											from_port=0, to_port=65535, cidr_ip='0.0.0.0/0')
 	if not success:
-		print('Failed to add SSH access.')
-	success = conn.authorize_security_group(group_name=security_group_name, ip_protocol='tcp', 
-											from_port=80, to_port=80, cidr_ip='0.0.0.0/0')
-	if not success:
-		print('Failed to add HTTP access.')
+		print('Failed to add UDP access.')
+
 	success = conn.authorize_security_group(group_name=security_group_name, ip_protocol='udp', 
 											from_port=0, to_port=65535, cidr_ip='0.0.0.0/0')
 	if not success:
@@ -62,7 +69,7 @@ def create_instance(conn, key_pair_name, instance_type, security_group_name, ami
 	# Wait for instance to be provisioned
 	while (newInstance.state != "running"):
 		print "\tWaiting for instance to be provisioned. Request status is " + newInstance.state + "..."
-		time.sleep(5)
+		sleep(5)
 		newInstance.update()
 	print "Instance is provisioned."
 	print "\tIP Address: " + newInstance.ip_address
@@ -70,7 +77,7 @@ def create_instance(conn, key_pair_name, instance_type, security_group_name, ami
 
 	# Alert user that instance is still not ready for use--it has to boot
 	print "Waiting for instance to boot to before connecting... (It will take appx. 50 seconds)... Please wait..."
-	time.sleep(50)
+	sleep(50)
 	print "Instance booted."
 
 	return newInstance
