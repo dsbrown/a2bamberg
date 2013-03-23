@@ -7,11 +7,9 @@ from time import sleep
 # Main function to create a RDS instance, authorize it with an EC2 group, the
 # return the endpoint that it can be reached at. Endpoint can be used like
 # a normal MySQL database from the authorized EC2 instance.
-def create_rds(conn, ec2_group, db_name, db_sg_name):
-	if not isinstance(ec2_group, boto.ec2.securitygroup.SecurityGroup):
-		raise Exception('EC2 group is not an object of type "ec2.securitygroup.SecurityGroup" as expected.')
+def create_rds(conn, conn_ec2, ec2_security_group_name, db_name, db_sg_name):
 	rds_db = create_rds_db(conn, db_name)
-	create_rds_security_group(conn, rds_db, ec2_group, db_sg_name)
+	create_rds_security_group(conn, conn_ec2, rds_db, ec2_security_group_name, db_sg_name)
 	return db.endpoint
 
 
@@ -34,11 +32,11 @@ def create_rds_db(conn, db_name):
 	return db
 
 
-def create_rds_security_group(conn, conn_ec2, rds_db, ec2_group_name, db_sg_name):
+def create_rds_security_group(conn, conn_ec2, rds_db, ec2_security_group_name, db_sg_name):
 	sgs = [i for i in conn.get_all_dbsecurity_groups() if i.name == db_sg_name]
 	if len(sgs) == 0:
 		sg = conn.create_dbsecurity_group(db_sg_name, db_sg_name)
-		ec2sg = conn_ec2.get_all_security_groups(groupnames=[ec2_group_name])[0]
+		ec2sg = conn_ec2.get_all_security_groups(groupnames=[ec2_security_group_name])[0]
 		sg.authorize(ec2_group=ec2sg)
 	else:
 		sg = sgs[0]
