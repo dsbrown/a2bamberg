@@ -2,8 +2,8 @@ import boto.rds
 import boto.ec2
 import aws_rds
 import aws_ec2
-import fabric
-import cuisine
+from fabric.api import *
+from cuisine import *
 import pickle
 import os.path
 
@@ -31,14 +31,25 @@ def clean():
 	aws_ec2.delete_key_pair(conn_ec2, ec2_key_name)
 
 
-# Creates RDS database and EC2 instance that is priviledged to access it
+# Creates RDS database
 def create_rds():
 	aws_ec2.create_key_pair(conn_ec2, ec2_key_name)
 	aws_ec2.create_security_group(conn_ec2, ec2_security_group_name)
 	db = aws_rds.create_rds(conn_rds, conn_ec2, ec2_security_group_name, db_name, db_sg_name)
-	set_rds_url(db.enpoint)
+	set_rds_url(db.endpoint)
+
+
+# Creates EC2 instance with permission to access the rds database
+def create_instance():
 	instance = aws_ec2.create_instance(conn_ec2, ec2_key_name, ec2_instance_type, ec2_security_group_name, ec2_ami)
 	set_ec2_url(instance.public_dns_name)
+
+
+def install_prerequisites():
+	with settings(host_string = 'ubuntu@' + load_env()['ec2_url'],key_filename = os.path.expanduser('~/.ssh/' + ec2_key_name + '.pem')):
+		sudo('apt-get update')
+		sudo('apt-get -y install python-dev python-setuptools mysql-client')
+		sudo('easy_install pip')
 
 
 def set_rds_url(rds_url):
@@ -53,11 +64,6 @@ def set_ec2_url(ec2_url):
 	save_env(env)
 
 
-#sudo apt-get update
-#sudo apt-get install python-dev python-setuptools mysql-client
-#sudo easy_install pip
-
-
 def load_env():
 	if os.path.exists(settings_file):
 		ret = pickle.load(open(settings_file, "rb"))
@@ -68,7 +74,17 @@ def load_env():
 		print 'No settings file found. Loading empty settings.'
 		return {}
 
+
 def save_env(env):
 	print 'Saved settings: '
 	print env
 	pickle.dump(env, open(settings_file, "wb"))
+
+
+# @hosts('host1')
+# def clean_and_upload():
+#     local('find assets/ -name "*.DS_Store" -exec rm '{}' \;')
+#     local('tar czf /tmp/assets.tgz assets/')
+#     put('/tmp/assets.tgz', '/tmp/assets.tgz')
+#     with cd('/var/www/myapp/'):
+#         run('tar xzf /tmp/assets.tgz')

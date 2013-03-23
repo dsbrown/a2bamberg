@@ -10,7 +10,7 @@ from time import sleep
 def create_rds(conn, conn_ec2, ec2_security_group_name, db_name, db_sg_name):
 	rds_db = create_rds_db(conn, db_name)
 	create_rds_security_group(conn, conn_ec2, rds_db, ec2_security_group_name, db_sg_name)
-	return rds_db.endpoint
+	return rds_db
 
 
 def create_rds_db(conn, db_name):
@@ -38,6 +38,7 @@ def create_rds_security_group(conn, conn_ec2, rds_db, ec2_security_group_name, d
 		sg = conn.create_dbsecurity_group(db_sg_name, db_sg_name)
 		ec2sg = conn_ec2.get_all_security_groups(groupnames=[ec2_security_group_name])[0]
 		sg.authorize(ec2_group=ec2sg)
+		sg.authorize(cidr_ip='0.0.0.0/0')
 	else:
 		sg = sgs[0]
 
