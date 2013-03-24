@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>MyTube</title>
+
+    <!-- Styles -->
+    <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet">
+    <style>
+		body {
+			padding-top: 60px;
+		}
+    </style>
+</head>
+
+<body>
+  
+    <div class="navbar navbar-inverse navbar-fixed-top">
+		<div class="navbar-inner">
+			<div class="container">
+				<button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+				<a class="brand" href="#">MyTube Videos</a>
+				<div class="nav-collapse collapse pull-right">
+					<ul class="nav">
+						<li><a href="./index.htm">Popular</a></li>
+						<li class="active"><a href="./upload.htm">Upload</a></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+    </div>
+
+    <div class="container">
+
+		<form id="s3_upload_form" action="https://chrishaum.bucket.s3.amazonaws.com/" method="post" enctype="multipart/form-data">
+			<fieldset>
+				<legend>Upload Clip</legend>
+				<!-- <label for="title">Title</label>
+				<input type="text" name="title" id="title" />
+				<label for="description">Description</label>
+				<textarea name="description" id="description"></textarea> -->
+				<input type="hidden" name="key" value="uploads/${filename}">
+				<input type="hidden" name="AWSAccessKeyId" value="AKIAJGEKGLKFQE6RIA5Q"> 
+				<input type="hidden" name="acl" value="public-read"> 
+				<input type="hidden" name="success_action_redirect" value="http://localhost:5000/upload/success">
+				<input type="hidden" name="policy" value="eyJleHBpcmF0aW9uIjogIjIwOTktMDEtMDFUMDA6MDA6MDBaIiwKICAiY29uZGl0aW9ucyI6IFsgCiAgICB7ImJ1Y2tldCI6ICJjaHJpc2hhdW0uYnVja2V0In0sIAogICAgWyJzdGFydHMtd2l0aCIsICIka2V5IiwgInVwbG9hZHMvIl0sCiAgICB7ImFjbCI6ICJwdWJsaWMtcmVhZCJ9LAogICAgeyJzdWNjZXNzX2FjdGlvbl9yZWRpcmVjdCI6ICJodHRwOi8vbG9jYWxob3N0OjUwMDAvdXBsb2FkL3N1Y2Nlc3MifSwKICAgIFsic3RhcnRzLXdpdGgiLCAiJENvbnRlbnQtVHlwZSIsICJ2aWRlbyJdLAogICAgWyJjb250ZW50LWxlbmd0aC1yYW5nZSIsIDAsIDIwOTcxNTIwXQogIF0KfQ==">
+				<input type="hidden" name="signature" value="v3+TF88eFrUHzmGud/H4aaI0M4Q=">
+				<input id="ct" type="hidden" name="Content-Type" value="">
+				<label for="title">File to upload:</label>
+				<input id="file_input" name="file" type="file">
+				<span class="help-block">Only video files may be uploaded.</span>
+				<br> 
+				<input type="submit" class="btn btn-success" value="Upload File"> 
+			</fieldset>
+		</form> 
+    </div>
+
+	<!-- Scripts -->
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	<script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
+	<script src="js/script.js"></script>
+	<script>
+	$(document).ready(function(){
+		// Only allows files with /video mimetypes to be uploaded
+		// Sets the form Content-type according to the file type
+		form = document.getElementById('s3_upload_form');
+		form.addEventListener('submit', function(e) {
+			var mimetype = document.getElementById('file_input').files[0].type;
+			$('#ct').val( mimetype ); // Set Content-type
+			if (!(/^video\/.+$/).test( mimetype )) {
+				alert("Only videos may be uploaded.");
+				e.preventDefault();
+			}
+		}, false);
+	});	
+	</script>
+	
+</body>
+</html>
