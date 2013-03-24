@@ -50,10 +50,37 @@ def create_instance():
 def install_prerequisites():
 	with settings(host_string = 'ubuntu@' + load_env()['ec2_url'],key_filename = os.path.expanduser('~/.ssh/' + ec2_key_name + '.pem')):
 		sudo('apt-get update')
+
+		# install python
 		sudo('apt-get -y install build-essential python-dev python-setuptools mysql-client')
 		sudo('easy_install pip')
-		sudo('pip install uwsgi') # this actually does have to be run outside of a virtualenv, so the config files are installed to system locations
 
+		# install web server
+		sudo('pip install uwsgi virtualenvwrapper') # this actually does have to be run outside of a virtualenv, so the config files are installed to system locations
+		put('server-bash-profile','~/.bashrc')
+		run('ls ~')
+		# run('export WORKON_HOME=~')
+		# sudo('source /usr/local/bin/virtualenvwrapper.sh')
+
+		# copy python files over into virtual env
+		run('mkvirtualenv tube')
+		run('workon tube')
+		with cd('~/tube'):
+			put('../tube/*.py','~/tube')
+
+		# copy static files to static site directory
+		run('mkdir -p ~/tube/www')
+		with cd('~/tube/www'):
+			put('../www','~/tube')
+
+	print 'Server started on ' + load_env()['ec2_url']
+
+
+def remove_site():
+	with settings(host_string = 'ubuntu@' + load_env()['ec2_url'],key_filename = os.path.expanduser('~/.ssh/' + ec2_key_name + '.pem')):
+		with cd('~/tube'):
+			sudo('rm ~/tube -r')
+			
 
 def set_rds_url(rds_url):
 	env = load_env()
