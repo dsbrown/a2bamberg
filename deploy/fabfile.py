@@ -10,7 +10,7 @@ import mysql.connector #pip: mysql-connector-python
 import exceptions
 
 # Settings
-settings_file = os.path.expanduser('~/assignment2-settings.pickle')
+settings_file = os.path.expanduser('~/assignment2-settings.pickle') # pickle settings file where EC2 instance public url and EBS url are stored so they can be used between fabric calls
 db_name = 'assignment2' # both name of RDS server and mysql database
 db_sg_name = 'assignment2'
 ec2_key_name = 'assignment2'
@@ -50,35 +50,9 @@ def create_instance():
 def install_prerequisites():
 	with settings(host_string = 'ubuntu@' + load_env()['ec2_url'],key_filename = os.path.expanduser('~/.ssh/' + ec2_key_name + '.pem')):
 		sudo('apt-get update')
-		sudo('apt-get -y install python-dev python-setuptools mysql-client')
+		sudo('apt-get -y install build-essential python-dev python-setuptools mysql-client')
 		sudo('easy_install pip')
-
-
-def test_sql():
-	if (load_env()['rds_url'] == None):
-		raise exception.Exception('Error: "rds_url" has not yet been set. Please run "fab create_rds" to create the RDS database.')
-
-	local("mysql -h{url} -uroot -psparkles1 -e 'create database if not exists {db_name}'".format(url=load_env()['rds_url'],db_name=db_name))
-	# connect to database
-	conn = mysql.connector.connect(user='root', password='sparkles1', host=load_env()['rds_url'], database=db_name)
-
-	movies_table_sql = """CREATE TABLE IF NOT EXISTS movies (
-							id varchar(10) NOT NULL PRIMARY KEY, 
-							title varchar(50) NOT NULL, 
-							description varchar(50),
-							url varchar(200))
-						"""
-	cursor = conn.cursor()
-	cursor.execute(movies_table_sql)
-	cursor.execute("INSERT INTO movies(id, title, description) VALUES('T1','Test 1','Test 1')")
-	cursor.execute("INSERT INTO movies(id, title, description) VALUES('T2','Test 2','Test 2')")
-	cursor.execute("INSERT INTO movies(id, title, description) VALUES('T4','Test 3','Test 3')")
-	cursor.execute("INSERT INTO movies(id, title, description) VALUES('T4','Test 3','Test 3')")
-	cursor.execute("SELECT * FROM movies")
-	for row in cursor.fetchall():
-		print row
-
-	conn.close()
+		sudo('pip install uwsgi') # this actually does have to be run outside of a virtualenv, so the config files are installed to system locations
 
 
 def set_rds_url(rds_url):
@@ -110,6 +84,48 @@ def save_env(env):
 	pickle.dump(env, open(settings_file, "wb"))
 
 
+# Test creating a sql database
+def test_sql():
+	if (load_env()['rds_url'] == None):
+		raise exception.Exception('Error: "rds_url" has not yet been set. Please run "fab create_rds" to create the RDS database.')
+
+	local("mysql -h{url} -uroot -psparkles1 -e 'create database if not exists {db_name}'".format(url=load_env()['rds_url'],db_name=db_name))
+	# connect to database
+	conn = mysql.connector.connect(user='root', password='sparkles1', host=load_env()['rds_url'], database=db_name)
+
+	movies_table_sql = """CREATE TABLE IF NOT EXISTS movies (
+							name varchar(50) NOT NULL PRIMARY KEY,
+							timestamp datetime NOT NULL,
+							rating double,
+							num_ratings int,
+							s3_url varchar(400),
+							streaming_url varchar(400))
+						"""
+	cursor = conn.cursor()
+
+	# deletes table if exists
+	cursor.execute("DROP TABLE IF EXISTS movies")
+
+	# creates table
+	cursor.execute(movies_table_sql)
+
+	# Add data
+	cursor.execute("INSERT INTO movies(name, timestamp, rating, num_ratings) VALUES('Test Vid 1', NOW(), 0.0, 0)")
+	cursor.execute("INSERT INTO movies(name, timestamp, rating, num_ratings) VALUES('Test Vid 2', NOW(), 0.0, 0)")
+	cursor.execute("INSERT INTO movies(name, timestamp, rating, num_ratings) VALUES('Test Vid 3', NOW(), 0.0, 0)")
+	cursor.execute("INSERT INTO movies(name, timestamp, rating, num_ratings) VALUES('Test Vid 4', NOW(), 0.0, 0)")
+	cursor.execute("SELECT * FROM movies")
+
+	# print out all data in the table
+	for row in cursor.fetchall():
+		print row
+
+	conn.commit() # commit() necessary, or changes are not saved
+	conn.close()
+
+
+
+# EXAMPLE FABRIC/CUSINE CODE
 # @hosts('host1')
 # def clean_and_upload():
 #     local('find assets/ -name "*.DS_Store" -exec rm '{}' \;')
