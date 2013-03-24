@@ -6,10 +6,12 @@ from fabric.api import *
 from cuisine import *
 import pickle
 import os.path
+import mysql.connector #pip: mysql-connector-python
+import exceptions
 
 # Settings
 settings_file = os.path.expanduser('~/assignment2-settings.pickle')
-db_name = 'assignment2'
+db_name = 'assignment2' # both name of RDS server and mysql database
 db_sg_name = 'assignment2'
 ec2_key_name = 'assignment2'
 ec2_security_group_name = 'assignment2'
@@ -50,6 +52,33 @@ def install_prerequisites():
 		sudo('apt-get update')
 		sudo('apt-get -y install python-dev python-setuptools mysql-client')
 		sudo('easy_install pip')
+
+
+def test_sql():
+	if (load_env()['rds_url'] == None):
+		raise exception.Exception('Error: "rds_url" has not yet been set. Please run "fab create_rds" to create the RDS database.')
+
+	local("mysql -h{url} -uroot -psparkles1 -e 'create database if not exists {db_name}'".format(url=load_env()['rds_url'],db_name=db_name))
+	# connect to database
+	conn = mysql.connector.connect(user='root', password='sparkles1', host=load_env()['rds_url'], database=db_name)
+
+	movies_table_sql = """CREATE TABLE IF NOT EXISTS movies (
+							id varchar(10) NOT NULL PRIMARY KEY, 
+							title varchar(50) NOT NULL, 
+							description varchar(50),
+							url varchar(200))
+						"""
+	cursor = conn.cursor()
+	cursor.execute(movies_table_sql)
+	cursor.execute("INSERT INTO movies(id, title, description) VALUES('T1','Test 1','Test 1')")
+	cursor.execute("INSERT INTO movies(id, title, description) VALUES('T2','Test 2','Test 2')")
+	cursor.execute("INSERT INTO movies(id, title, description) VALUES('T4','Test 3','Test 3')")
+	cursor.execute("INSERT INTO movies(id, title, description) VALUES('T4','Test 3','Test 3')")
+	cursor.execute("SELECT * FROM movies")
+	for row in cursor.fetchall():
+		print row
+
+	conn.close()
 
 
 def set_rds_url(rds_url):
