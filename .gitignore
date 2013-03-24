@@ -36,3 +36,5 @@ nosetests.xml
 
 web-services/include
 web-services/local
+deploy/include
+deploy/local
