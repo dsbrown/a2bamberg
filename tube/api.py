@@ -1,50 +1,66 @@
 # See http://httpstatus.es/ for HTTP response codes
-
+from pprint import pprint
 from flask import Flask, request
 from flask.ext.restful import Resource, Api, abort, reqparse
 
 app = Flask(__name__)
 api = Api(app)
 
+# Test data
+vids = []
+for i in range(3):
+	vids.append({	
+	'name': 'vid{}'.format(i),
+	'timestamp': 10 - i,
+	'rating': i,
+	'num_ratings': 22,
+	's3_url': 'http://s3....',
+	'streaming_url': 'http://cloudfront...',
+})
+
+# Parse request arguments
 parser = reqparse.RequestParser()
-parser.add_argument('vin', type=str, required=True, help='vin cannot be blank')
+parser.add_argument('order', type=str, required=False)
+parser.add_argument('direction', type=str, required=False)
 
-# Dummy vehicles object
-vehicles = {'123': {'vin':'123', 'vehicle_images': ['img_url_1','img_url_2']}}
+# Validate request arguments against these
+valid_keys = ['rating', 'timestamp', 'name']
+valid_directions = ['ascending', 'descending']
 
-# We'll populate this with images as they are uploaded
-# @todo issue: manage files that are uploaded to this host but not yet to S3
-staged_image_urls = {}
+# For translating direction to reverse
+reverse = {'ascending': False, 'descending': True}
 
-def abort_if_vin_doesnt_exist(args):
-	if 'vin' not in args:
-		abort(400, message=u"Request requires a 'vin' argument")
-	if args['vin'] not in vehicles:
-		abort(404, message="Vehicle {} does not exist".format(args['vin']))
+def validate_args(args):
+	'''Validate request arguments'''
+	if args['order'] not in valid_keys:
+		abort(400, message=u"Invalid 'order' value: '{}'. Valid values: {}".format(args['order'], valid_keys))
+	if args['direction'] not in valid_directions:
+		abort(400, message=u"Invalid 'direction' value: {}. Valid values: {}".format(args['direction'], valid_directions))
 
-class ListVehicles(Resource):
-	def get(self):
-		return vehicles
 
-class ListImages(Resource):
+class List(Resource):
 	def get(self):
 		args = parser.parse_args()
-		abort_if_vin_doesnt_exist(args)
-		return {'vehicle_images': vehicles[args['vin']]['vehicle_images']}
+		validate_args(args)
+		return sorted(vids, key=lambda vid: vid[args['order']], reverse=reverse[args['direction']])
 
-class SaveImage(Resource):
+
+class Upload(Resource):
 	def post(self):
-		abort(404, message="Not implemented yet")
+		pass
 
-class SaveVehicle(Resource):
+class Delete(Resource):
 	def post(self):
-		abort(404, message="Not implemented yet")
+		pass
 
+class Rate(Resource):
+	def post(self):
+		pass
 
-api.add_resource(ListVehicles, '/api/list-vehicles')
-api.add_resource(ListImages, '/api/list-images')
-api.add_resource(SaveImage, '/api/save-image')
-api.add_resource(SaveVehicle, '/api/save-vehicle')
+api.add_resource(List, '/api/list')
+api.add_resource(Upload, '/api/upload')
+api.add_resource(Delete, '/api/delete')
+api.add_resource(Rate, '/api/rate')
 
 if __name__ == '__main__':
 	app.run('0.0.0.0', debug=True)

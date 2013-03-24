@@ -42,3 +42,7 @@ web-services/local
 
 deploy/include
 deploy/local
+
+videos
+
+.DS_Store
