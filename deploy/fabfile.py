@@ -93,7 +93,7 @@ def test_sql():
 	# connect to database
 	conn = mysql.connector.connect(user='root', password='sparkles1', host=load_env()['rds_url'], database=db_name)
 
-	movies_table_sql = """CREATE TABLE IF NOT EXISTS movies (
+	movies_table_sql = """CREATE TABLE IF NOT EXISTS videos (
 							name varchar(50) NOT NULL PRIMARY KEY,
 							timestamp datetime NOT NULL,
 							rating double,
@@ -104,17 +104,17 @@ def test_sql():
 	cursor = conn.cursor()
 
 	# deletes table if exists
-	cursor.execute("DROP TABLE IF EXISTS movies")
+	cursor.execute("DROP TABLE IF EXISTS videos")
 
 	# creates table
 	cursor.execute(movies_table_sql)
 
 	# Add data
-	cursor.execute("INSERT INTO movies(name, timestamp, rating, num_ratings) VALUES('Test Vid 1', NOW(), 0.0, 0)")
-	cursor.execute("INSERT INTO movies(name, timestamp, rating, num_ratings) VALUES('Test Vid 2', NOW(), 0.0, 0)")
-	cursor.execute("INSERT INTO movies(name, timestamp, rating, num_ratings) VALUES('Test Vid 3', NOW(), 0.0, 0)")
-	cursor.execute("INSERT INTO movies(name, timestamp, rating, num_ratings) VALUES('Test Vid 4', NOW(), 0.0, 0)")
-	cursor.execute("SELECT * FROM movies")
+	cursor.execute("INSERT INTO videos(name, timestamp, rating, num_ratings) VALUES('Test Vid 1', NOW(), 0.0, 0)")
+	cursor.execute("INSERT INTO videos(name, timestamp, rating, num_ratings) VALUES('Test Vid 2', NOW(), 0.0, 0)")
+	cursor.execute("INSERT INTO videos(name, timestamp, rating, num_ratings) VALUES('Test Vid 3', NOW(), 0.0, 0)")
+	cursor.execute("INSERT INTO videos(name, timestamp, rating, num_ratings) VALUES('Test Vid 4', NOW(), 0.0, 0)")
+	cursor.execute("SELECT * FROM videos")
 
 	# print out all data in the table
 	for row in cursor.fetchall():
