@@ -39,3 +39,6 @@ web-services/local
 
 # Vagrant 
 .vagrant
+
+deploy/include
+deploy/local
