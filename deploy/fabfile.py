@@ -8,6 +8,8 @@ import pickle
 import os.path
 import mysql.connector #pip: mysql-connector-python
 import exceptions
+from fabtools import require
+from fabtools.python import virtualenv
 
 # Settings
 settings_file = os.path.expanduser('~/assignment2-settings.pickle') # pickle settings file where EC2 instance public url and EBS url are stored so they can be used between fabric calls
@@ -49,7 +51,7 @@ def create_instance():
 
 def install_prerequisites():
 	with settings(host_string = 'ubuntu@' + load_env()['ec2_url'],key_filename = os.path.expanduser('~/.ssh/' + ec2_key_name + '.pem')):
-		sudo('apt-get update')
+		#sudo('apt-get update')
 
 		# install python
 		sudo('apt-get -y install build-essential python-dev python-setuptools mysql-client')
@@ -57,21 +59,23 @@ def install_prerequisites():
 
 		# install web server
 		sudo('pip install uwsgi virtualenvwrapper') # this actually does have to be run outside of a virtualenv, so the config files are installed to system locations
-		put('server-bash-profile','~/.bashrc')
-		run('ls ~')
-		# run('export WORKON_HOME=~')
-		# sudo('source /usr/local/bin/virtualenvwrapper.sh')
+		# put('server-bash-profile','~/.bashrc')
 
 		# copy python files over into virtual env
-		run('mkvirtualenv tube')
-		run('workon tube')
-		with cd('~/tube'):
-			put('../tube/*.py','~/tube')
+		require.python.virtualenv('tube')
+		put('../tube/*.py','~/tube')
+		put('../tube/requirements.txt','~/tube/requirements.txt')
+		sudo('pip install -r ~/tube/requirements.txt')
+		# with virtualenv('/home/ubuntu/tube'):
+		# 	require.python.requirements('~/tube/requirements.txt')
 
 		# copy static files to static site directory
 		run('mkdir -p ~/tube/www')
 		with cd('~/tube/www'):
 			put('../www','~/tube')
+
+		# start up web server
+
 
 	print 'Server started on ' + load_env()['ec2_url']
 
@@ -79,8 +83,29 @@ def install_prerequisites():
 def remove_site():
 	with settings(host_string = 'ubuntu@' + load_env()['ec2_url'],key_filename = os.path.expanduser('~/.ssh/' + ec2_key_name + '.pem')):
 		with cd('~/tube'):
-			sudo('rm ~/tube -r')
-			
+			try:
+				sudo('rmvirtualenv tube')
+			except:
+				pass
+			try:
+				sudo('rm ~/tube -r')
+			except:
+				pass
+
+def start_web_server():
+	print 'Starting server on: ' + load_env()['ec2_url']
+	with settings(host_string = 'ubuntu@' + load_env()['ec2_url'],key_filename = os.path.expanduser('~/.ssh/' + ec2_key_name + '.pem')):
+		with virtualenv('/home/ubuntu/tube'):
+			# stop web server if running
+			try:
+				run('uwsgi --stop /tmp/project-master.pid')
+			except:
+				pass
+
+			with cd('~/tube'):
+				run('uwsgi -s /tmp/uwsgi.sock --module api --callable app &')
+				# run('uwsgi --http :8035 --static-check=~/tube/www --wsgi-file api.py --callable app --processes 4 --threads 2')
+
 
 def set_rds_url(rds_url):
 	env = load_env()
