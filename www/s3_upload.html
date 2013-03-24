@@ -5,13 +5,17 @@
 		<script type="text/javascript" src="http://code.jquery.com/jquery-latest.js"></script>
 		<script>
 		$(document).ready(function(){
-			$("#s3_upload_form").submit(function(e) { 
-				var ext = $('#file_input').val().split('.').pop().toLowerCase();
-				if($.inArray(ext, ["mov", "mp4", "mpeg4", "avi", "wmv", "mpegps", "flv", "3gpp", "webm"]) == -1) {
-						alert('Only videos may be uploaded.');
-						e.preventDefault();
+			// Only allows files with /video mimetypes to be uploaded
+			// Sets the form Content-type according to the file type
+			form = document.getElementById('s3_upload_form');
+			form.addEventListener('submit', function(e) {
+				var mimetype = document.getElementById('file_input').files[0].type;
+				$('#ct').val( mimetype ); // Set Content-type
+				if (!(/^video\/.+$/).test( mimetype )) {
+					alert("Only videos may be uploaded.");
+					e.preventDefault();
 				}
-			});
+			}, false);
 		});	
 		</script>
 	</head>
@@ -23,7 +27,7 @@
 			<input type="hidden" name="acl" value="public-read"> 
 			<input type="hidden" name="success_action_redirect" value="http://localhost:5000/upload/success">
 			<input type="hidden" name="policy" value="eyJleHBpcmF0aW9uIjogIjIwOTktMDEtMDFUMDA6MDA6MDBaIiwKICAiY29uZGl0aW9ucyI6IFsgCiAgICB7ImJ1Y2tldCI6ICJjaHJpc2hhdW0uYnVja2V0In0sIAogICAgWyJzdGFydHMtd2l0aCIsICIka2V5IiwgInVwbG9hZHMvIl0sCiAgICB7ImFjbCI6ICJwdWJsaWMtcmVhZCJ9LAogICAgeyJzdWNjZXNzX2FjdGlvbl9yZWRpcmVjdCI6ICJodHRwOi8vbG9jYWxob3N0OjUwMDAvdXBsb2FkL3N1Y2Nlc3MifSwKICAgIFsic3RhcnRzLXdpdGgiLCAiJENvbnRlbnQtVHlwZSIsICJ2aWRlbyJdLAogICAgWyJjb250ZW50LWxlbmd0aC1yYW5nZSIsIDAsIDIwOTcxNTIwXQogIF0KfQ==">
-			<input type="hidden" name="Content-Type" value="video">
+			<input id="ct" type="hidden" name="Content-Type" value="">
 			<input type="hidden" name="signature" value="v3+TF88eFrUHzmGud/H4aaI0M4Q=">
 			<!-- <input type="hidden" name="Content-Type" value="image/jpeg"> -->
 			<!-- Include any additional input fields here -->
