@@ -8,6 +8,8 @@ import pickle
 import os.path
 import mysql.connector #pip: mysql-connector-python
 import exceptions
+from fabtools import require
+from fabtools.python import virtualenv
 
 # Settings
 settings_file = os.path.expanduser('~/assignment2-settings.pickle') # pickle settings file where EC2 instance public url and EBS url are stored so they can be used between fabric calls
@@ -41,6 +43,13 @@ def create_rds():
 	set_rds_url(db.endpoint)
 
 
+# Provisions an instance and gets it up and running with static content and the python app
+def create_web_server():
+	create_instance()
+	install_prerequisites()
+	start_web_server()
+
+
 # Creates EC2 instance with permission to access the rds database
 def create_instance():
 	instance = aws_ec2.create_instance(conn_ec2, ec2_key_name, ec2_instance_type, ec2_security_group_name, ec2_ami)
@@ -48,11 +57,75 @@ def create_instance():
 
 
 def install_prerequisites():
+	if not load_env()['ec2_url']:
+		print 'Please run "fab create_instance" before running this command.'
+		return
+
 	with settings(host_string = 'ubuntu@' + load_env()['ec2_url'],key_filename = os.path.expanduser('~/.ssh/' + ec2_key_name + '.pem')):
 		sudo('apt-get update')
+
+		# install python
 		sudo('apt-get -y install build-essential python-dev python-setuptools mysql-client')
 		sudo('easy_install pip')
-		sudo('pip install uwsgi') # this actually does have to be run outside of a virtualenv, so the config files are installed to system locations
+
+		# install web server
+		sudo('pip install uwsgi virtualenvwrapper') # this actually does have to be run outside of a virtualenv, so the config files are installed to system locations
+		# put('server-bash-profile','~/.bashrc')
+
+		# copy python files over into virtual env
+		require.python.virtualenv('tube')
+		put('../tube/*.py','~/tube')
+		put('../tube/requirements.txt','~/tube/requirements.txt')
+		sudo('pip install -r ~/tube/requirements.txt')
+		# with virtualenv('/home/ubuntu/tube'):
+		# 	require.python.requirements('~/tube/requirements.txt')
+
+		# copy static files to static site directory
+		run('mkdir -p ~/tube/www')
+		with cd('~/tube/www'):
+			put('../www','~/tube')
+
+
+def start_web_server():
+	if not load_env()['ec2_url']:
+		print 'Please run "fab create_instance" before running this command.'
+		return
+
+	print 'Starting server on: ' + load_env()['ec2_url']
+	with settings(host_string = 'ubuntu@' + load_env()['ec2_url'],key_filename = os.path.expanduser('~/.ssh/' + ec2_key_name + '.pem')):
+
+		# start up web server
+		run('ls /etc/nginx')
+		put('nginx-config-file','/etc/nginx/sites-available/default', use_sudo=True)
+		sudo('chmod 777 /tmp/uwsgi.sock')
+		sudo('/etc/init.d/nginx restart')
+		print 'Server starting on ' + load_env()['ec2_url']
+
+		with virtualenv('/home/ubuntu/tube'):
+			run('uwsgi -s /tmp/uwsgi.sock --module api --callable app --chdir /home/ubuntu/tube --home /home/ubuntu/tube')
+
+			# # stop web server if running
+			# try:
+			# 	run('uwsgi --stop /tmp/project-master.pid')
+			# except:
+			# 	pass
+
+			# with cd('~/tube'):
+			# 	run('uwsgi -s /tmp/uwsgi.sock --module api --callable app &')
+			# 	# run('uwsgi --http :8035 --static-check=~/tube/www --wsgi-file api.py --callable app --processes 4 --threads 2')
+
+
+def remove_site():
+	with settings(host_string = 'ubuntu@' + load_env()['ec2_url'],key_filename = os.path.expanduser('~/.ssh/' + ec2_key_name + '.pem')):
+		with cd('~/tube'):
+			try:
+				sudo('rmvirtualenv tube')
+			except:
+				pass
+			try:
+				sudo('rm ~/tube -r')
+			except:
+				pass
 
 
 def set_rds_url(rds_url):

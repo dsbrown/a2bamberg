@@ -29,8 +29,8 @@
 				<a class="brand" href="#">MyTube Videos</a>
 				<div class="nav-collapse collapse pull-right">
 					<ul class="nav">
-						<li class="active"><a href="./index.htm">Popular</a></li>
-						<li><a href="./upload.htm">Upload</a></li>
+						<li><a href="./index.htm">Popular</a></li>
+						<li class="active"><a href="./upload.htm">Upload</a></li>
 					</ul>
 				</div>
 			</div>
@@ -38,21 +38,36 @@
     </div>
 
     <div class="container">
-
-		<h1>Popular Clips</h1>
-		<table id="videos" style="width: 600px;" class="table table-hover">
-			<thead>
-			</thead>
-			<tbody>
-			</tbody>
-		</table>
-	  
+		<form id="s3_upload_form" action="https://chrishaum.bucket.s3.amazonaws.com/" method="post" enctype="multipart/form-data">
+			<fieldset>
+				<legend>Upload Clip</legend>
+				<label for="title">Title</label><input type="text" name="title" id="title" />
+				<label for="description">Description</label><textarea name="description" id="description"></textarea>
+				<label for="title">File to upload:</label><input id="file" name="file" type="file">
+				<span class="help-block">Only video files may be uploaded.</span>
+				<br/> 
+				<input type="submit" class="btn btn-success" value="Upload File"> 
+			</fieldset>
+		</form> 
     </div>
 
 	<!-- Scripts -->
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 	<script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
 	<script src="js/script.js"></script>
+	<script>
+	$(document).ready(function(){
+		// Only allows files with /video mimetypes to be uploaded
+		form = document.getElementById('s3_upload_form');
+		form.addEventListener('submit', function(e) {
+			var mimetype = document.getElementById('file').files[0].type;
+			if (!(/^video\/.+$/).test( mimetype )) {
+				alert("Only videos may be uploaded.");
+				e.preventDefault();
+			}
+		}, false);
+	});	
+	</script>
 	
 </body>
 </html>
