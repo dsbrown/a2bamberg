@@ -1,17 +1,16 @@
 # See http://httpstatus.es/ for HTTP response codes
 import sys
 from pprint import pprint
+<<<<<<< HEAD
 import s3_upload
 import aws_rds
 import boto
 
 from flask import Flask, request, jsonify, redirect, send_from_directory, flash
 from flask.ext.restful import Resource, Api, abort, reqparse
-from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.uploads import delete, init, save, Upload
 
 config = json.loads(open('config.json','r').read())
-
 
 app = Flask(__name__)
 api = Api(app)
@@ -114,6 +113,7 @@ class Delete(Resource):
 
 
 
+
 class Rate(Resource):
 	def post(self):
 		abort(400, message="Rate not implemented yet.")
@@ -138,6 +138,12 @@ def upload_success():
 		abort(400, message=u"Error saving vehicle: {}".format(str(err)))
 
 	return redirect('/list?order=rating&direction=desc')
+
+
+# # For testing only: for static content
+# @app.route('/<path:filename>')
+# def send_pic(filename):
+# 	return send_from_directory('../www', filename)
 
 
 # # For testing only: for static content
