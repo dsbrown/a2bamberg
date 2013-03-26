@@ -1,7 +1,7 @@
 # See http://httpstatus.es/ for HTTP response codes
 import sys
 from pprint import pprint
-from flask import Flask, request, jsonify, redirect
+from flask import Flask, request, jsonify, redirect, send_from_directory
 from flask.ext.restful import Resource, Api, abort, reqparse
 import aws_rds
 
@@ -91,6 +91,7 @@ api.add_resource(Upload, '/api/upload')
 api.add_resource(Delete, '/api/delete')
 api.add_resource(Rate, '/api/rate')
 
+
 @app.route('/upload/success')
 def upload_success():
 	bucket = request.args.get('bucket','')
@@ -98,6 +99,12 @@ def upload_success():
 	url = "https://s3.amazonaws.com/{}/{}".format(bucket, key)
 	save_video(name=key, s3_url=url)
 	return redirect('/api/list?order=rating&direction=descending')
+
+
+# Route for testing: for static content
+@app.route('/<path:filename>')
+def send_pic(filename):
+	return send_from_directory('../www', filename)
 
 
 if __name__ == '__main__':
