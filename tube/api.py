@@ -2,6 +2,7 @@
 from pprint import pprint
 from flask import Flask, request, jsonify, redirect
 from flask.ext.restful import Resource, Api, abort, reqparse
+import boto
 
 app = Flask(__name__)
 api = Api(app)
@@ -26,6 +27,7 @@ save_video('talking-cats', 'https://s3.amazonaws.com/chrishaum.bucket/uploads/ta
 parser = reqparse.RequestParser()
 parser.add_argument('order', type=str, required=False)
 parser.add_argument('direction', type=str, required=False)
+parser.add_argument('url', type=str, required=False)
 
 # Validate request arguments against these
 valid_keys = ['rating', 'timestamp', 'name']
@@ -34,7 +36,7 @@ valid_directions = ['ascending', 'descending']
 # For translating direction to reverse
 reverse = {'ascending': False, 'descending': True}
 
-def validate_args(args):
+def validate_list_args(args):
 	'''Validate request arguments'''
 	if args['order'] not in valid_keys:
 		abort(400, message=u"Invalid 'order' value: {}. Valid values: {}".format(args['order'], valid_keys))
@@ -45,24 +47,29 @@ def validate_args(args):
 class List(Resource):
 	def get(self):
 		args = parser.parse_args()
-		validate_args(args)
+		validate_list_args(args)
 		return sorted(vids, key=lambda vid: vid[args['order']], reverse=reverse[args['direction']])
 
 
-class Upload(Resource):
-	def post(self):
-		pass
-
 class Delete(Resource):
-	def post(self):
-		pass
+	def get(self):
+		args = parser.parse_args()
+
+		# Extract key from URL
+		# ...
+
+		# Delete the video
+		# boto.s3.bucket.delete_key( ... )
+
+		abort(402, message="Delete not implemented yet.")
+		return jsonify({'deleted=True, '})
+
 
 class Rate(Resource):
 	def post(self):
 		pass
 
 api.add_resource(List, '/api/list')
-api.add_resource(Upload, '/api/upload')
 api.add_resource(Delete, '/api/delete')
 api.add_resource(Rate, '/api/rate')
 

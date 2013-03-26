@@ -1,3 +1,5 @@
+# Source: http://aws.amazon.com/articles/1434
+
 import base64
 import hmac, hashlib
 
