@@ -1,0 +1,44 @@
+# File: /etc/nginx/sites-available/default
+# And make sure there is a symbolic link to this file in: /etc/nginx/sites-enabled/default
+server {
+	listen 8011;
+	root /home/ubuntu/tube/www;
+	index index.htm index.html;
+
+	# Static content site (location already specified by 'root' above)
+	location / { 
+
+	}
+
+	# Python Api Site
+	location = /api { rewrite ^ /api/; }
+	location /api { try_files $uri @app; }
+	location @app {
+		include uwsgi_params;
+		uwsgi_param SCRIPT_NAME /app;
+		uwsgi_modifier1 30;
+		uwsgi_pass unix:/tmp/uwsgi.sock;
+	}
+
+	# Notes on getting UWSGI to work with NGINX
+	#
+	# 1) Make sure NGINX has permission to access the *.sock file.  It was necessary
+	#    for me to run the command 'sudo chmod 777 /tmp/uwsgi.sock' to get it to work.
+	#
+	# 2) Make sure UWSGI is running, and that the app loads correctly.  I had to:
+	#      a) 'workon' the virtual env it is stored in
+	#      b) Start the service using the command:
+	#            uwsgi -s /tmp/uwsgi.sock 
+	#                 --module api 
+	#				  --callable app 
+	#				  --chdir /home/ubuntu/tube 
+	#				  --home /home/ubuntu/tube
+	#
+	# 3) If the site still won't show, check the log files at:
+	#		/var/log/nginx/error.log
+	#    They are very descriptive about why they cannot handle requests.
+	#
+	# 4) Restart nginx after any config changes using the command:
+	#		sudo /etc/init.d/nginx restart
+	#
+}

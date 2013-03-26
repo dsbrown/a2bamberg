@@ -85,11 +85,12 @@ class Rate(Resource):
 	def post(self):
 		pass
 
-
-api.add_resource(List, '/api/list')
-api.add_resource(Upload, '/api/upload')
-api.add_resource(Delete, '/api/delete')
-api.add_resource(Rate, '/api/rate')
+# The entire python app is hosted under the /api directory, so the full url
+# of these will be similar to: /api/list, and /api/upload/success
+api.add_resource(List, '/list')
+api.add_resource(Upload, '/upload')
+api.add_resource(Delete, '/delete')
+api.add_resource(Rate, '/rate')
 
 
 @app.route('/upload/success')
@@ -101,10 +102,10 @@ def upload_success():
 	return redirect('/api/list?order=rating&direction=descending')
 
 
-# Route for testing: for static content
-@app.route('/<path:filename>')
-def send_pic(filename):
-	return send_from_directory('../www', filename)
+# # For testing only: for static content
+# @app.route('/<path:filename>')
+# def send_pic(filename):
+# 	return send_from_directory('../www', filename)
 
 
 if __name__ == '__main__':
