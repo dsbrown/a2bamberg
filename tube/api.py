@@ -1,7 +1,6 @@
 # See http://httpstatus.es/ for HTTP response codes
 import sys
 from pprint import pprint
-<<<<<<< HEAD
 import s3_upload
 import aws_rds
 import boto
