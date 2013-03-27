@@ -47,3 +47,5 @@ videos
 
 .DS_Store
 config.json
+include
+local
