@@ -2,7 +2,7 @@ import boto
 import json
 import os
 
-config = json.loads(open('config.json','r').read())
+config = json.loads(open('config.json','r').read().decode('utf-8'))
 
 def ensure_bucket(connection):
 	try:
@@ -34,4 +34,5 @@ def upload(the_file):
 	k.key = os.path.basename(the_file)
 	k.set_contents_from_filename(the_file, policy='public-read')
 	url = '/'.join((config['aws-bucket-website'], config['aws-bucket-name'], k.key))
-	print('View the file: {}'.format(url))
+	print('S3 upload: {}'.format(url))
+	return url

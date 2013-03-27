@@ -1,6 +1,8 @@
 from nose.tools import *
 from fabric.api import env, local, run
 from requests import put, get
+from api import app
+
 
 def test_404():
 	r = get('http://localhost:5000/FAIL')
@@ -20,7 +22,7 @@ def test_list():
 	assert j[0]['rating'] <= j[1]['rating']
 
 def test_s3_upload():
-	r = put('http://localhost:5000/upload')  # @todo
+	r = get('http://localhost:5000/upload')  # @todo
 	eq_(r.status_code, 301)
 
 @with_setup(test_s3_upload)
