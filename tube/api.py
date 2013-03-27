@@ -32,7 +32,8 @@ rds = aws_rds.RDS(
 	password=password,
 	)
 
-# Flask-Upload configuration
+# Configure the upload set.
+# See http://pythonhosted.org/Flask-Uploads/
 app.config['UPLOADED_VIDEOS_DEST'] = '/tmp'
 VIDEOS = tuple('mp4 mov mpeg4 avi wmv mpegps flv 3gpp webm'.split())
 videos = UploadSet(name='videos', extensions=VIDEOS)
@@ -71,10 +72,6 @@ class List(Resource):
 			return sorted(vids, key=lambda vid: vid[args['order']], reverse=reverse[args['direction']])
 
 
-# Configure the upload set.
-# See http://pythonhosted.org/Flask-Uploads/
-
-
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
 	'''Upload a new video.'''
@@ -95,7 +92,6 @@ def upload():
 				s3_url = s3_upload.upload(filepath)
 				try:
 					rds.save_video(name=title, s3_url=s3_url)
-					flash("Video successfully saved.")
 					return redirect('/list?order=timestamp&direction=desc')
 				except IntegrityError as err:
 					flash(u"Duplicate video title. Try again.")
@@ -125,19 +121,6 @@ class Rate(Resource):
 api.add_resource(List, '/list')
 api.add_resource(Delete, '/delete')
 api.add_resource(Rate, '/rate')
-
-
-@app.route('/upload/success')
-def upload_success():
-	bucket = request.args.get('bucket','')
-	key = request.args.get('key','')
-	s3_url = "https://s3.amazonaws.com/{}/{}".format(bucket, key)
-	try:
-		rds.save_video(name=args['name'], s3_url=s3_url)
-	except Exception, err:
-		abort(400, message=u"Error saving vehicle: {}".format(str(err)))
-
-	return redirect('/list?order=timestamp&direction=desc')
 
 
 # # For testing only: for static content
