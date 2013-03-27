@@ -46,6 +46,6 @@ deploy/local
 videos
 
 .DS_Store
-config.json
 include
 local
+config.json
