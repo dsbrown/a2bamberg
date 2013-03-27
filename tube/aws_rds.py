@@ -43,6 +43,7 @@ class RDS:
 		conn.commit() # commit() necessary, or changes are not saved
 		conn.close()
 
+
 	def get_videos(self):
 		conn = self.get_conn()
 		cursor = conn.cursor()
@@ -82,6 +83,15 @@ class RDS:
 
 		conn.commit() # commit() necessary, or changes are not saved
 		conn.close()
+
+
+	def rate_video(self, video_id, rating):
+		pass
+
+
+	def delete_video(self, video_id):
+		pass
+
 
 	def recreate_table(self):
 		conn = self.get_conn();
