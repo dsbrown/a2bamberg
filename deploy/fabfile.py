@@ -65,20 +65,20 @@ def install_prerequisites():
 		sudo('apt-get update')
 
 		# install python
-		sudo('apt-get -y install build-essential python-dev python-setuptools mysql-client')
+		sudo('apt-get -y install build-essential python-dev python-setuptools mysql-client nginx git')
 		sudo('easy_install pip')
 
 		# install web server
 		sudo('pip install uwsgi virtualenvwrapper') # this actually does have to be run outside of a virtualenv, so the config files are installed to system locations
-		# put('server-bash-profile','~/.bashrc')
+		put('server-bash-profile','~/.bashrc')
 
 		# copy python files over into virtual env
 		require.python.virtualenv('tube')
 		put('../tube/*.py','~/tube')
 		put('../tube/requirements.txt','~/tube/requirements.txt')
 		sudo('pip install -r ~/tube/requirements.txt')
-		# with virtualenv('/home/ubuntu/tube'):
-		# 	require.python.requirements('~/tube/requirements.txt')
+		with virtualenv('/home/ubuntu/tube'):
+		 	require.python.requirements('~/tube/requirements.txt')
 
 		# copy static files to static site directory
 		run('mkdir -p ~/tube/www')
@@ -95,10 +95,11 @@ def start_web_server():
 	with settings(host_string = 'ubuntu@' + load_env()['ec2_url'],key_filename = os.path.expanduser('~/.ssh/' + ec2_key_name + '.pem')):
 
 		# start up web server
-		run('ls /etc/nginx')
 		put('nginx-config-file','/etc/nginx/sites-available/default', use_sudo=True)
-		sudo('chmod 777 /tmp/uwsgi.sock')
+		put('/home/matt/.boto','/home/ubuntu/.boto', use_sudo=True)
+		#sudo('chmod 777 /tmp/uwsgi.sock')
 		sudo('/etc/init.d/nginx restart')
+		sudo('')
 		print 'Server starting on ' + load_env()['ec2_url']
 
 		with virtualenv('/home/ubuntu/tube'):
