@@ -9,6 +9,7 @@ class RDS:
 		self.table_name = table_name
 		self.username = username
 		self.password = password
+		self.ensure_db_exists()
 
 
 	movies_table_sql = """CREATE TABLE IF NOT EXISTS videos (
@@ -26,7 +27,6 @@ class RDS:
 
 
 	def save_video(self, name, s3_url):
-		self.ensure_db_exists()
 		conn = self.get_conn()
 		cursor = conn.cursor()
 
@@ -44,14 +44,13 @@ class RDS:
 		conn.close()
 
 	def get_videos(self):
-		self.ensure_db_exists()
 		conn = self.get_conn()
 		cursor = conn.cursor()
 		cursor.execute("SELECT name, timestamp, rating, num_ratings, s3_url, streaming_url FROM videos")
 		rows = cursor.fetchall()
 		videos = []
 		for (name, timestamp, rating, num_ratings, s3_url, streaming_url) in rows:
-			print (name, timestamp, rating, num_ratings, s3_url, streaming_url)
+			# print (name, timestamp, rating, num_ratings, s3_url, streaming_url)
 			videos.append({
 				"name": name,
 				"timestamp": timestamp.isoformat(),

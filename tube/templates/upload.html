@@ -29,8 +29,8 @@
 				<a class="brand" href="#">MyTube Videos</a>
 				<div class="nav-collapse collapse pull-right">
 					<ul class="nav">
-						<li><a href="./index.htm">Popular</a></li>
-						<li class="active"><a href="./upload.htm">Upload</a></li>
+						<li><a href="./list?order=rating&amp;direction=desc">Popular</a></li>
+						<li class="active"><a href="/upload">Upload</a></li>
 					</ul>
 				</div>
 			</div>
@@ -38,7 +38,16 @@
     </div>
 
     <div class="container">
-		<form id="s3_upload_form" action="https://chrishaum.bucket.s3.amazonaws.com/" method="post" enctype="multipart/form-data">
+    	{% with messages = get_flashed_messages() %}
+		  {% if messages %}
+		    <ul class="flashes">
+		    {% for message in messages %}
+		      <li>{{ message }}</li>
+		    {% endfor %}
+		    </ul>
+		  {% endif %}
+		{% endwith %}
+		<form method="POST" enctype="multipart/form-data" action="{{ url_for('upload') }}">
 			<fieldset>
 				<legend>Upload Clip</legend>
 				<label for="title">Title</label><input type="text" name="title" id="title" />
