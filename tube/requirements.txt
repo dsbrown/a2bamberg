@@ -1,11 +1,15 @@
 Fabric==1.6.0
 Flask==0.9
 Flask-RESTful==0.1.7
+-e git://github.com/FelixLoether/flask-uploads@d73fb8c8a4859019265e62f27e168a8bb09abfd5#egg=Flask_Uploads-dev
 Jinja2==2.6
+ProxyTypes==0.9
 Werkzeug==0.8.3
 argparse==1.2.1
+boto==2.8.0
 distribute==0.6.35
 mysql-connector-python==1.0.9
 paramiko==1.10.0
 pycrypto==2.6
+python-loaders==0.2.3
 wsgiref==0.1.2

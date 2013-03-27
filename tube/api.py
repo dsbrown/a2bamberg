@@ -4,6 +4,7 @@ from pprint import pprint
 import s3_upload
 import aws_rds
 import boto
+import json
 
 from flask import Flask, request, jsonify, redirect, send_from_directory, flash
 from flask.ext.restful import Resource, Api, abort, reqparse
@@ -63,25 +64,25 @@ VIDEOS = tuple('mp4 mov mpeg4 avi wmv mpegps flv 3gpp webm'.split())
 def new():
 	video_set = UploadSet(name='videos', extensions=VIDEOS)
 	if request.method == 'POST':
-        video = request.files.get('file')
-        title = request.form.get('title')
-        description = request.form.get('description')
-        if not (video and title and description):
-            flash("You must fill in all the fields")
-        else:
-            try:
-                filename = video_set.save(video)  # flask writes the video to disk
-            except UploadNotAllowed:
-                flash("The upload was not allowed")
-            else:
-                vid = Video(title=title, description=description, filename=filename)
-                vid.id = unique_id()
-                # vid.store()
-                rds.save_video(name=args['name'], s3_url=s3_url)
-                flash("Video successfully saved.")
-                return to_index()
-    # return render_template('upload.html')
-    return redirect('/list?order=rating&direction=desc')
+		video = request.files.get('file')
+		title = request.form.get('title')
+		description = request.form.get('description')
+		if not (video and title and description):
+			flash("You must fill in all the fields")
+		else:
+			try:
+				filename = video_set.save(video)  # flask writes the video to disk
+			except UploadNotAllowed:
+				flash("The upload was not allowed")
+			else:
+				vid = Video(title=title, description=description, filename=filename)
+				vid.id = unique_id()
+				# vid.store()
+				rds.save_video(name=args['name'], s3_url=s3_url)
+				flash("Video successfully saved.")
+				return to_index()
+	# return render_template('upload.html')
+	return redirect('/list?order=rating&direction=desc')
 
 
 class Upload(Resource):
