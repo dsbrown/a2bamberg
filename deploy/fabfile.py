@@ -75,10 +75,14 @@ def install_prerequisites():
 		# copy python files over into virtual env
 		require.python.virtualenv('tube')
 		put('../tube/*.py','~/tube')
+		put('../tube/*.json','~/tube')
 		put('../tube/requirements.txt','~/tube/requirements.txt')
-		sudo('pip install -r ~/tube/requirements.txt')
+		#sudo('pip install -r ~/tube/requirements.txt')
+		sudo('pip install flask flask-uploads')
 		with virtualenv('/home/ubuntu/tube'):
 		 	require.python.requirements('~/tube/requirements.txt')
+			# require.python.package('flask')
+			# require.python.package('flask-uploads')
 
 		# copy static files to static site directory
 		run('mkdir -p ~/tube/www')
@@ -97,9 +101,8 @@ def start_web_server():
 		# start up web server
 		put('nginx-config-file','/etc/nginx/sites-available/default', use_sudo=True)
 		put('/home/matt/.boto','/home/ubuntu/.boto', use_sudo=True)
-		#sudo('chmod 777 /tmp/uwsgi.sock')
+		sudo('chmod 777 /tmp/uwsgi.sock')
 		sudo('/etc/init.d/nginx restart')
-		sudo('')
 		print 'Server starting on ' + load_env()['ec2_url']
 
 		with virtualenv('/home/ubuntu/tube'):
@@ -114,6 +117,13 @@ def start_web_server():
 			# with cd('~/tube'):
 			# 	run('uwsgi -s /tmp/uwsgi.sock --module api --callable app &')
 			# 	# run('uwsgi --http :8035 --static-check=~/tube/www --wsgi-file api.py --callable app --processes 4 --threads 2')
+
+
+def restart_nginx():
+	with settings(host_string = 'ubuntu@' + load_env()['ec2_url'],key_filename = os.path.expanduser('~/.ssh/' + ec2_key_name + '.pem')):
+		# sudo('/etc/init.d/nginx restart')
+		sudo('ls /var/log/nginx')
+		sudo('more /var/log/nginx/access.log')
 
 
 def remove_site():

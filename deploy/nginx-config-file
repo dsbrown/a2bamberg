@@ -1,7 +1,7 @@
 # File: /etc/nginx/sites-available/default
 # And make sure there is a symbolic link to this file in: /etc/nginx/sites-enabled/default
 server {
-	listen 8011;
+	listen 80;
 	root /home/ubuntu/tube/www;
 	index index.htm index.html;
 

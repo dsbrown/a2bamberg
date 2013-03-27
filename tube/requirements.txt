@@ -7,9 +7,11 @@ ProxyTypes==0.9
 Werkzeug==0.8.3
 argparse==1.2.1
 boto==2.8.0
+distribute==0.6.35
 mysql-connector-python==1.0.9
 nose==1.2.1
 paramiko==1.10.0
 pycrypto==2.6
+python-loaders==0.2.3
 requests==1.1.0
 wsgiref==0.1.2

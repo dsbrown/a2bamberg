@@ -143,4 +143,4 @@ api.add_resource(Rate, '/rate')
 app.secret_key = ')zq3jg3*3+*32=i$qcdp2(p#k_$!5y_0ridku3i(g&7mql+xqv'
 
 if __name__ == '__main__':
-	app.run('0.0.0.0', debug=True)
+	app.run('0.0.0.0', debug=True, port=5000)
