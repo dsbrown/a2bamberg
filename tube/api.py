@@ -42,34 +42,13 @@ configure_uploads(app, videos)
 
 # Parse request arguments
 parser = reqparse.RequestParser()
-parser.add_argument('order', type=str, required=False)
-parser.add_argument('direction', type=str, required=False)
 parser.add_argument('url', type=str, required=False)
-
-# Validate request arguments against these
-valid_keys = ['rating', 'timestamp', 'name']
-valid_directions = ['asc', 'desc']
-
-# For translating direction to reverse
-reverse = {'asc': False, 'desc': True}
-
-def validate_list_args(args):
-	'''Validate request arguments'''
-	if args['order'] not in valid_keys:
-		abort(400, message=u"Invalid 'order' value: {}. Valid values: {}".format(args['order'], valid_keys))
-	if args['direction'] not in valid_directions:
-		abort(400, message=u"Invalid 'direction' value: {}. Valid values: {}".format(args['direction'], valid_directions))
 
 
 class List(Resource):
 	def get(self):
-		args = parser.parse_args()
-		validate_list_args(args)
 		vids = rds.get_videos()
-		if args['order'] == 'name':
-			return sorted(vids, key=lambda vid: vid[args['order']].lower(), reverse=reverse[args['direction']])
-		else:
-			return sorted(vids, key=lambda vid: vid[args['order']], reverse=reverse[args['direction']])
+		return vids
 
 
 @app.route('/upload', methods=['GET', 'POST'])
