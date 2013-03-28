@@ -45,7 +45,7 @@ function _initializeDeleteButton() {
 		if (confirm("Are you sure you want to delete this video?")) {
 			$.ajax({
 				type: "POST",
-				url:'/api/delete/' + "id": $this.parents('tr').data('id'),
+				url:'/api/delete/' + $this.parents('tr').data('id'),
 				dataType:"json",
 				error: function(d) {
 					alert('An ajax error occurred: ' + d.responseText);
