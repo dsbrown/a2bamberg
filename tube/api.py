@@ -1,7 +1,7 @@
 import sys
 from mysql.connector import IntegrityError
 from pprint import pprint
-import s3_upload
+import s3
 import aws_rds
 import boto
 import json
@@ -42,9 +42,15 @@ configure_uploads(app, videos)
 
 
 class List(Resource):
-	def get(self):
+	def get(self, uuid=None):
 		vids = rds.get_videos()
-		return vids
+		if not uuid:
+			return sorted(vids, key=lambda vid: vid['timestamp'], reverse=True)
+		else:
+			for vid in vids:
+				if vid['name'] == uuid:
+					return vid
+		abort(404, "That video does not exist.")
 
 
 @app.route('/api/upload', methods=['POST'])
@@ -52,41 +58,28 @@ def upload():
 	'''Upload a new video.'''
 	if request.method == 'POST':
 		video = request.files.get('file')
-		title = request.form.get('title')
-		description = request.form.get('description')
-		if not (video and title and description):
+		name = request.form.get('name')
+		if not (video and name):
+			raise
 			flash("You must fill in all the fields")
+			return render_template('upload.html')
 		else:
 			try:
 				filename = videos.save(video)  # flask writes the video to disk
 				filepath = os.path.join(app.config['UPLOADED_VIDEOS_DEST'], filename)
 			except UploadNotAllowed:
-				flash("The upload was not allowed")
-				abort(400, message=u"Error saving vehicle: {}".format(str(err)))
+				flash("Only videos are allowed.")
+				return render_template('upload.html')
 			else:
-				s3_url = s3_upload.upload(filepath)
+				s3_url = s3.upload(filepath)
 				try:
-					rds.save_video(name=title, s3_url=s3_url)
-					return redirect('/index.html')
+					rds.save_video(name=name, s3_url=s3_url)
+					return redirect('/list')
 				except IntegrityError as err:
 					abort(400, message=u"Duplicate video title. Try again.")
 				    
 	elif request.method == 'GET':
 		return render_template('/index.html')
-
-
-class Delete(Resource):
-	def post(self):
-		# Parse request arguments
-		parser = reqparse.RequestParser()
-		parser.add_argument('id', type=int, required=True)
-		args = parser.parse_args()
-		video_id = args['id']
-		rds.delete_video(video_id)
-
-		# TODO: Delete the video
-		# boto.s3.bucket.delete_key( ... )
-		abort(400, message=u"Deleted RDS row.  Deleting from S3 bucket not implemented yet.")
 
 
 class Rate(Resource):
@@ -100,17 +93,21 @@ class Rate(Resource):
 		return { "new_rating": new_rating }
 
 
+class Delete(Resource):
+	def post(self, video_id):
+		rds.delete_video(video_id)
+		vid = rds.get_video(key='id', value=video_id)[0]
+		key_name = vid['s3_url'].split('/')[-1]
+		s3.delete(key_name=key_name)
+		return redirect('/list')
+
+
 # The entire python app is hosted under the /api directory, so the full url
 # of these will be similar to: /api/list, and /api/upload/success
-api.add_resource(List, '/api/list')
-api.add_resource(Delete, '/api/delete')
+api.add_resource(List, '/api/list', '/list/', '/list/<string:uuid>')
+api.add_resource(Delete, '/api/delete/<int:id>')
 api.add_resource(Rate, '/api/rate')
 
-
-# For testing only: for static content
-@app.route('/<path:filename>')
-def send_pic(filename):
-	return send_from_directory('../www', filename)
 
 app.secret_key = ')zq3jg3*3+*32=i$qcdp2(p#k_$!5y_0ridku3i(g&7mql+xqv'
 
