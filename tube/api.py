@@ -108,6 +108,10 @@ api.add_resource(List, '/api/list', '/list/', '/list/<string:uuid>')
 api.add_resource(Delete, '/api/delete/<int:id>')
 api.add_resource(Rate, '/api/rate')
 
+# For testing only: for static content
+@app.route('/<path:filename>')
+def send_pic(filename):
+	return send_from_directory('../www', filename)
 
 app.secret_key = ')zq3jg3*3+*32=i$qcdp2(p#k_$!5y_0ridku3i(g&7mql+xqv'
 
