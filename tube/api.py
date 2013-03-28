@@ -8,7 +8,7 @@ import json
 import os
 import exceptions
 
-from flask import flash, Flask, request, jsonify, redirect, render_template, send_from_directory
+from flask import flash, Flask, request, jsonify, redirect, render_template, send_from_directory, make_response
 from flask.ext.restful import Resource, Api, abort, reqparse
 from flaskext.uploads import configure_uploads, UploadSet, UploadNotAllowed
 
@@ -49,8 +49,9 @@ class List(Resource):
 		else:
 			for vid in vids:
 				if vid['id'] == id:
-					return vid
-		abort(404, "That video does not exist.")
+					return make_response(render_template('video.html', s3_url=vid['s3_url'], name=vid['name']))
+		flash("That video does not exist.")
+		redirect('/index.html')
 
 
 @app.route('/api/upload', methods=['POST', 'GET'])
@@ -99,7 +100,7 @@ class Delete(Resource):
 		rds.delete_video(video_id=id)
 		key_name = vid['s3_url'].split('/')[-1]
 		s3.delete(key_name=key_name)
-		return render_template('/index.html')
+		return render_template('index.html')
 
 
 # The entire python app is hosted under the /api directory, so the full url

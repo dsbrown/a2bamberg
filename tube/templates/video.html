@@ -26,11 +26,11 @@
 					<span class="icon-bar"></span>
 					<span class="icon-bar"></span>
 				</button>
-				<a class="brand" href="#">MyTube Videos</a>
+				<a class="brand" href="../../index.html">MyTube Videos</a>
 				<div class="nav-collapse collapse pull-right">
 					<ul class="nav">
-						<li class="active"><a href="./index.htm">Popular</a></li>
-						<li><a href="./upload.htm">Upload</a></li>
+						<li class="active"><a href="../../index.html">Popular</a></li>
+						<li><a href="../../upload.html">Upload</a></li>
 					</ul>
 				</div>
 			</div>
@@ -39,11 +39,21 @@
 
     <div class="container">
 
-		<h1>Popular Clips</h1>
+		<h1>{{ name }}</h1>
 		<table id="videos" style="width: 600px;" class="table table-hover">
 			<thead>
 			</thead>
 			<tbody>
+				<tr>
+				<video id="s3_video" class="video-js vjs-default-skin" controls width="640" height="400" preload="auto">
+				  <source type="video/mp4" src="{{ s3_url }}">
+				</video>
+				</tr>
+				<tr>
+				<video id="s3_video" class="video-js vjs-default-skin" controls width="640" height="400" preload="auto">
+				  <source type="video/mp4" src="CLOUDFRONT_URL">
+				</video>
+				</tr>
 			</tbody>
 		</table>
 	  
