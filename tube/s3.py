@@ -4,7 +4,10 @@ import os
 
 config = json.loads(open('config.json','r').read().decode('utf-8'))
 
-def ensure_bucket(connection):
+def ensure_bucket():
+	
+	connection = boto.connect_s3(config['aws-access-key'].strip(), config['aws-secret-access-key'].strip())  # @todo security vulnerability
+
 	try:
 		buckets = connection.get_all_buckets()
 	except:
@@ -24,15 +27,16 @@ def ensure_bucket(connection):
 				aws_bucket = b
 	return aws_bucket
 
-
 def upload(the_file):
-	connection = boto.connect_s3(config['aws-access-key'].strip(), config['aws-secret-access-key'].strip())  # @todo security vulnerability
-	aws_bucket = ensure_bucket(connection)
+	aws_bucket = ensure_bucket()
 
 	# Upload the file
 	k = boto.s3.key.Key(aws_bucket)
 	k.key = os.path.basename(the_file)
 	k.set_contents_from_filename(the_file, policy='public-read')
 	url = '/'.join((config['aws-bucket-website'], config['aws-bucket-name'], k.key))
-	print('S3 upload: {}'.format(url))
 	return url
+
+def delete(key_name):
+	aws_bucket = ensure_bucket()
+	aws_bucket.delete_key(key_name=key_name)

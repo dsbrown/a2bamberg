@@ -1,42 +1,51 @@
 from nose.tools import *
 from fabric.api import env, local, run
-from requests import put, get
-from api import app
+import requests
+from werkzeug import secure_filename
+import api
+import json
+import uuid
+import s3
 
+
+api.app.config['TESTING'] = True
+app = api.app.test_client()
 
 def test_404():
-	r = get('http://localhost:5000/FAIL')
+	r = app.get('SHOULD_404')
 	eq_(r.status_code, 404)
 
-
-def list(order, direction):
-	r = get('http://localhost:5000/list', params={'direction':direction, 'order': order})
-	return r.json()
 
 def test_list():
-	j = list('name','asc')
-	eq_(j[0]['name'],'kitten-surprise.mp4')
-	j = list('timestamp','desc')
-	assert j[0]['timestamp'] >= j[1]['timestamp']
-	j = list('rating','asc')
-	assert j[0]['rating'] <= j[1]['rating']
+	r = app.get('/list')
+	eq_(r.status_code, 200)
+	eq_(r.content_type, 'application/json')
 
-def test_s3_upload():
-	r = get('http://localhost:5000/upload')  # @todo
-	eq_(r.status_code, 301)
 
-@with_setup(test_s3_upload)
+def video_in_list(the_list, **kwargs):
+	r = False
+	for vid in the_list:
+		vid_list = []
+		for name, value in kwargs.items():
+			try:
+				vid_list.append(bool(vid[name] == value))
+			except KeyError:
+				pass
+		if all(vid_list):
+			r = vid
+	return r
+
+
+def list_all():
+	return json.loads(app.get('/list').data)
+
+def most_recent_video():
+	return sorted( list_all(), key= lambda vid: vid['timestamp'], reverse=True)[0]
+
 def test_s3_delete():
-	key = 'talking-cats.mp4'
-	s3_url = 'https://s3.amazonaws.com/chrishaum.bucket/uploads/{}'.format(key)
-	delete_endpoint = 'http://localhost:5000/delete?url={}'.format(s3_url)
-	eq_(get(s3_url).status_code, 200)
-	r = get(delete_endpoint)
-	# eq_(r.json()['deleted'], 'True')
-	eq_(get(s3_url).status_code, 404)
-	
-
-@nottest
-def test_upload_success():
-	r = get('http://localhost:5000/upload/success')
-	eq_(r.status_code, 404)
+	vid = most_recent_video()
+	s3_url = vid['s3_url']
+	key_name = vid['name']
+	eq_(requests.get(s3_url).status_code, 200)
+	r = app.get('/delete/{}'.format(key_name))
+	eq_(requests.get(s3_url).status_code, 403)
