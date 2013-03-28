@@ -86,7 +86,7 @@ class Delete(Resource):
 
 		# TODO: Delete the video
 		# boto.s3.bucket.delete_key( ... )
-		abort(400, message="Deleted RDS row.  Deleting from S3 bucket not implemented yet.")
+		abort(400, message=u"Deleted RDS row.  Deleting from S3 bucket not implemented yet.")
 
 
 class Rate(Resource):

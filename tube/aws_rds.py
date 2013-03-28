@@ -122,6 +122,7 @@ class RDS:
 			"id": video_id
 		}
 		cursor.execute("DELETE FROM videos WHERE id=%(id)s", params)
+		conn.commit()
 		conn.close()
 		return
 
