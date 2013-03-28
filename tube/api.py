@@ -6,6 +6,7 @@ import aws_rds
 import boto
 import json
 import os
+import exceptions
 
 from flask import flash, Flask, request, jsonify, redirect, render_template, send_from_directory
 from flask.ext.restful import Resource, Api, abort, reqparse
@@ -40,18 +41,13 @@ videos = UploadSet(name='videos', extensions=VIDEOS)
 configure_uploads(app, videos)
 
 
-# Parse request arguments
-parser = reqparse.RequestParser()
-parser.add_argument('url', type=str, required=False)
-
-
 class List(Resource):
 	def get(self):
 		vids = rds.get_videos()
 		return vids
 
 
-@app.route('/api/upload', methods=['GET', 'POST'])
+@app.route('/api/upload', methods=['POST'])
 def upload():
 	'''Upload a new video.'''
 	if request.method == 'POST':
@@ -71,34 +67,37 @@ def upload():
 				s3_url = s3_upload.upload(filepath)
 				try:
 					rds.save_video(name=title, s3_url=s3_url)
-					return redirect('/list?order=timestamp&direction=desc')
+					return redirect('/index.html')
 				except IntegrityError as err:
-					flash(u"Duplicate video title. Try again.")
-  					return render_template('upload.html')
+					abort(400, message=u"Duplicate video title. Try again.")
 				    
 	elif request.method == 'GET':
-		return render_template('upload.html')
+		return render_template('/index.html')
 
 
 class Delete(Resource):
 	def get(self):
+		# Parse request arguments
+		parser = reqparse.RequestParser()
+		parser.add_argument('id', type=int, required=True)
 		args = parser.parse_args()
-		# Extract key from URL
-		# ...
-		# Delete the video
+		video_id = args['id']
+		rds.delete_video(video_id)
+
+		# TODO: Delete the video
 		# boto.s3.bucket.delete_key( ... )
-		abort(400, message="DELETE not implemented yet.")
+		abort(400, message="Deleted RDS row.  Deleting from S3 bucket not implemented yet.")
 
 
 class Rate(Resource):
-	def post(self):
-		abort(400, message="Rate not implemented yet.")
-
-
-class Recreate(Resource):
 	def get(self):
-		rds.recreate_table()
-		return "Successfully recreated table"
+		# Parse request arguments
+		parser = reqparse.RequestParser()
+		parser.add_argument('id', type=int, required=True)
+		parser.add_argument('rating', type=int, required=True)
+		args = parser.parse_args()
+		new_rating = rds.rate_video(args['id'],args['rating'])
+		return { "new_rating": new_rating }
 
 
 # The entire python app is hosted under the /api directory, so the full url

@@ -49,13 +49,14 @@ class RDS:
 
 
 	def get_videos(self, specific_id=None):
-		if (specific_id != None and not specific_id.isdigit()):
-			raise exception.Exception('specific_id parameter must be omitted, or be a digit')
+		# defend against SQL injection attack
+		if not specific_id == None and not isinstance(specific_id, int):
+			raise exception.Exception('specific_id parameter must be an integer')
 		conn = self.get_conn()
 		cursor = conn.cursor()
 		sql = "SELECT id, name, timestamp, rating, num_ratings, s3_url, streaming_url FROM videos"
 		if (specific_id):
-			sql = sql + " WHERE id = " + specific_id
+			sql = sql + " WHERE id = " + str(specific_id)
 		cursor.execute(sql)
 		rows = cursor.fetchall()
 		videos = []
@@ -100,15 +101,16 @@ class RDS:
 		if (len(videos) == 0):
 			raise exception.Exception('Unable to rate video. Video not found.')
 		video = videos[0]
-		new_rating = get_new_rating(video.num_ratings, video.rating, rating)
+		new_rating = self.get_new_rating(video['num_ratings'], video['rating'], rating)
 		conn = self.get_conn()
 		cursor = conn.cursor()
 		params = {
 			"rating": new_rating,
-			"num_ratings": video.num_ratings + 1,
+			"num_ratings": video['num_ratings'] + 1,
 			"id": video_id
 		}
 		cursor.execute("UPDATE videos SET rating=%(rating)s, num_ratings=%(num_ratings)s WHERE id=%(id)s", params)
+		conn.commit()
 		conn.close()
 		return new_rating
 
@@ -140,6 +142,6 @@ class RDS:
 
 
 	# Gets the new average rating, baased on the number of previous ratings and the cumulative previous rating
-	def get_new_rating(num_ratings, rating, new_rating):
+	def get_new_rating(self, num_ratings, rating, new_rating):
 		total_rating = num_ratings * rating
 		return (total_rating + new_rating) / (num_ratings + 1)
