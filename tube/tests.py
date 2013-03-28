@@ -3,6 +3,7 @@ from fabric.api import env, local, run
 import requests
 from werkzeug import secure_filename
 import api
+from cloudfront import distribute
 import json
 import uuid
 import s3
@@ -49,3 +50,10 @@ def test_s3_delete():
 	eq_(requests.get(s3_url).status_code, 200)
 	r = app.get('/delete/{}'.format(key_name))
 	eq_(requests.get(s3_url).status_code, 403)
+
+
+def test_cloudfront_distribute():
+	s3_url = 'http://cloud-tube-demo.s3.amazonaws.com/kitten-surprise.mp4'
+	eq_( requests.get(s3_url).status_code, 200)
+	cloudfront_url = distribute(s3_url=s3_url)
+	eq_( requests.get(cloudfront_url).status_code, 200)

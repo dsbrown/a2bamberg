@@ -45,14 +45,17 @@
 			</thead>
 			<tbody>
 				<tr>
-				<video id="s3_video" class="video-js vjs-default-skin" controls width="640" height="400" preload="auto">
-				  <source type="video/mp4" src="{{ s3_url }}">
-				</video>
+					<video id="s3_video" class="video-js vjs-default-skin" controls width="640" height="400" preload="auto">
+					  <source type="video/mp4" src="{{ s3_url }}">
+					</video>
 				</tr>
 				<tr>
-				<video id="s3_video" class="video-js vjs-default-skin" controls width="640" height="400" preload="auto">
-				  <source type="video/mp4" src="CLOUDFRONT_URL">
-				</video>
+					<video id="s3_video" class="video-js vjs-default-skin" controls width="640" height="400" preload="auto">
+					  <source type="video/mp4" src="{{ streaming_url }}">
+					</video>
+				</tr>
+				<tr>
+					<a href="{{ s3_url }}">Download video</a>
 				</tr>
 			</tbody>
 		</table>

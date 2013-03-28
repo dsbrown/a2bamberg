@@ -3,6 +3,7 @@ from mysql.connector import IntegrityError
 from pprint import pprint
 import s3
 import aws_rds
+import cloudfront
 import boto
 import json
 import os
@@ -15,6 +16,10 @@ from flaskext.uploads import configure_uploads, UploadSet, UploadNotAllowed
 # Declare the app
 app = Flask(__name__)
 api = Api(app)
+
+# For cloudfront
+config = json.load( open('config.json') )
+s3_bucket_name = config['aws-bucket-name']
 
 # Database configuration
 rds_url = "assignment2.cqs9bki9xts5.us-east-1.rds.amazonaws.com"
@@ -49,7 +54,10 @@ class List(Resource):
 		else:
 			for vid in vids:
 				if vid['id'] == id:
-					return make_response(render_template('video.html', s3_url=vid['s3_url'], name=vid['name']))
+					return make_response(render_template('video.html', 
+															s3_url=vid['s3_url'], 
+															name=vid['name'],
+															streaming_url=vid['streaming_url']))
 		flash("That video does not exist.")
 		redirect('/index.html')
 
@@ -72,15 +80,16 @@ def upload():
 				return render_template('upload.html')
 			else:
 				s3_url = s3.upload(filepath)
+				cloudfront_url = cloudfront.distribute(s3_url=s3_url)
 				try:
-					rds.save_video(name=name, s3_url=s3_url)
+					rds.save_video(name=name, s3_url=s3_url, streaming_url=cloudfront_url)
 					return redirect('/index.html')
 				except IntegrityError as err:
 					flash("Duplicate video title. Try again.")
 					return render_template('upload.html')
 				    
 	elif request.method == 'GET':
-		return redirect('/upload.html')
+		return render_template('upload.html')
 
 
 class Rate(Resource):

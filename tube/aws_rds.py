@@ -29,7 +29,7 @@ class RDS:
 		return mysql.connector.connect(user=self.username, password=self.password, host=self.rds_url, database=self.database_name)
 
 
-	def save_video(self, name, s3_url):
+	def save_video(self, name, s3_url, streaming_url):
 		conn = self.get_conn()
 		cursor = conn.cursor()
 
@@ -39,7 +39,7 @@ class RDS:
 		video_data = {
 			'name': name,
 			's3_url': s3_url,
-			'streaming_url': 'NEEDS_CLOUDFRONT'
+			'streaming_url': streaming_url,
 		}
 
 		cursor.execute(sql, video_data)

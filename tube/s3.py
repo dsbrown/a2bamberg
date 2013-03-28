@@ -34,7 +34,7 @@ def upload(the_file):
 	k = boto.s3.key.Key(aws_bucket)
 	k.key = os.path.basename(the_file)
 	k.set_contents_from_filename(the_file, policy='public-read')
-	url = '/'.join((config['aws-bucket-website'], config['aws-bucket-name'], k.key))
+	url = "http://{}/{}".format(config['aws-bucket-website'], k.key)
 	return url
 
 def delete(key_name):
