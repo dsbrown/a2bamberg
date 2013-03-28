@@ -76,7 +76,7 @@ def upload():
 
 
 class Delete(Resource):
-	def get(self):
+	def post(self):
 		# Parse request arguments
 		parser = reqparse.RequestParser()
 		parser.add_argument('id', type=int, required=True)
@@ -90,7 +90,7 @@ class Delete(Resource):
 
 
 class Rate(Resource):
-	def get(self):
+	def post(self):
 		# Parse request arguments
 		parser = reqparse.RequestParser()
 		parser.add_argument('id', type=int, required=True)

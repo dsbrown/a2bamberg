@@ -21,6 +21,7 @@ function _initializeRateButton() {
 	$('#videos').on('click', '.rate', function() {
 		$this = $(this);
 		$.ajax({
+			type: "POST",
 			url:'/api/rate',
 			dataType:"json",
 			data: {
@@ -43,6 +44,7 @@ function _initializeDeleteButton() {
 		$this = $(this);
 		if (confirm("Are you sure you want to delete this video?")) {
 			$.ajax({
+				type: "POST",
 				url:'/api/delete',
 				dataType:"json",
 				data: {
