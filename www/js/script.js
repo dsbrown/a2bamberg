@@ -69,7 +69,7 @@ function refreshList() {
 				$('#videos tbody').append('<tr data-id="' + this.id + '"><td>' 
 					//+ videoTagTemplate.replace('{url}', this.s3_url) 
 					//+ '</td><td>' 
-					+ '<a href="/api/item/{id}">{name}</a>'.replace('{id}', this.id).replace('{name}', this.name)
+					+ '<a href="/api/list/{id}">{name}</a>'.replace('{id}', this.id).replace('{name}', this.name)
 					+ '</td><td class="rating">' + Math.round(this.rating*10)/10 + ' / 5'
 					+ '</td><td class="inline"><select class="rate-scale" style="width: 50px;"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>' 
 					+ '</td><td><button class="btn rate">Submit Rating</button>'

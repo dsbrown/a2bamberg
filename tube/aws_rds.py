@@ -74,28 +74,6 @@ class RDS:
 		conn.close()
 		return videos
 
-	def get_video(self, key, value):
-		conn = self.get_conn()
-		cursor = conn.cursor()
-		cursor.execute("""SELECT v.name, v.timestamp, v.rating, v.num_ratings, v.s3_url, v.streaming_url
-							FROM videos as v WHERE v.{} = "{}"
-						""".format(key, value))
-		rows = cursor.fetchall()
-		videos = []
-		for (name, timestamp, rating, num_ratings, s3_url, streaming_url) in rows:
-			# print (name, timestamp, rating, num_ratings, s3_url, streaming_url)
-			videos.append({
-				"name": name,
-				"timestamp": timestamp.isoformat(),
-				"rating": rating,
-				"num_ratings": num_ratings,
-				"s3_url": s3_url,
-				"streaming_url": streaming_url
-				})
-
-		conn.close()
-		return videos
-
 
 	def ensure_db_exists(self):
 		local("mysql -h{url} -u{username} -p{password} -e 'create database if not exists {database_name}'"

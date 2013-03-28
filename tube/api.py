@@ -42,25 +42,24 @@ configure_uploads(app, videos)
 
 
 class List(Resource):
-	def get(self, uuid=None):
+	def get(self, id=None):
 		vids = rds.get_videos()
-		if not uuid:
+		if not id:
 			return sorted(vids, key=lambda vid: vid['timestamp'], reverse=True)
 		else:
 			for vid in vids:
-				if vid['name'] == uuid:
+				if vid['id'] == id:
 					return vid
 		abort(404, "That video does not exist.")
 
 
-@app.route('/api/upload', methods=['POST'])
+@app.route('/api/upload', methods=['POST', 'GET'])
 def upload():
 	'''Upload a new video.'''
 	if request.method == 'POST':
 		video = request.files.get('file')
 		name = request.form.get('name')
 		if not (video and name):
-			raise
 			flash("You must fill in all the fields")
 			return render_template('upload.html')
 		else:
@@ -74,12 +73,13 @@ def upload():
 				s3_url = s3.upload(filepath)
 				try:
 					rds.save_video(name=name, s3_url=s3_url)
-					return redirect('/list')
+					return redirect('/index.html')
 				except IntegrityError as err:
-					abort(400, message=u"Duplicate video title. Try again.")
+					flash("Duplicate video title. Try again.")
+					return render_template('upload.html')
 				    
 	elif request.method == 'GET':
-		return render_template('/index.html')
+		return redirect('/upload.html')
 
 
 class Rate(Resource):
@@ -94,17 +94,17 @@ class Rate(Resource):
 
 
 class Delete(Resource):
-	def post(self, video_id):
-		rds.delete_video(video_id)
-		vid = rds.get_video(key='id', value=video_id)[0]
+	def post(self, id):
+		vid = rds.get_videos(specific_id=id)[0]
+		rds.delete_video(video_id=id)
 		key_name = vid['s3_url'].split('/')[-1]
 		s3.delete(key_name=key_name)
-		return redirect('/list')
+		return render_template('/index.html')
 
 
 # The entire python app is hosted under the /api directory, so the full url
 # of these will be similar to: /api/list, and /api/upload/success
-api.add_resource(List, '/api/list', '/list/', '/list/<string:uuid>')
+api.add_resource(List, '/api/list', '/api/list/', '/api/list/<int:id>')
 api.add_resource(Delete, '/api/delete/<int:id>')
 api.add_resource(Rate, '/api/rate')
 

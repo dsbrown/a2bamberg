@@ -26,11 +26,11 @@
 					<span class="icon-bar"></span>
 					<span class="icon-bar"></span>
 				</button>
-				<a class="brand" href="#">MyTube Videos</a>
+				<a class="brand" href="./index.html">MyTube Videos</a>
 				<div class="nav-collapse collapse pull-right">
 					<ul class="nav">
-						<li><a href="/index.html">Popular</a></li>
-						<li class="active"><a href="/upload.html">Upload</a></li>
+						<li><a href="./index.html">Popular</a></li>
+						<li class="active"><a href="./upload.html">Upload</a></li>
 					</ul>
 				</div>
 			</div>
@@ -41,9 +41,9 @@
 		<form method="POST" enctype="multipart/form-data" action="/api/upload">
 			<fieldset>
 				<legend>Upload Clip</legend>
-				<label for="title">Title</label><input type="text" name="title" id="title" />
+				<label for="name">Title</label><input type="text" name="name" id="name" />
 				<label for="description">Description</label><textarea name="description" id="description"></textarea>
-				<label for="title">File to upload:</label><input id="file" name="file" type="file">
+				<label for="file">File to upload:</label><input id="file" name="file" type="file">
 				<span class="help-block">Only video files may be uploaded.</span>
 				<br/> 
 				<input type="submit" class="btn btn-success" value="Upload File"> 
