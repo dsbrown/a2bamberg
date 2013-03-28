@@ -51,7 +51,7 @@ class List(Resource):
 		return vids
 
 
-@app.route('/upload', methods=['GET', 'POST'])
+@app.route('/api/upload', methods=['GET', 'POST'])
 def upload():
 	'''Upload a new video.'''
 	if request.method == 'POST':
@@ -95,29 +95,23 @@ class Rate(Resource):
 		abort(400, message="Rate not implemented yet.")
 
 
+class Recreate(Resource):
+	def get(self):
+		rds.recreate_table()
+		return "Successfully recreated table"
+
+
 # The entire python app is hosted under the /api directory, so the full url
 # of these will be similar to: /api/list, and /api/upload/success
-api.add_resource(List, '/list')
-api.add_resource(Delete, '/delete')
-api.add_resource(Rate, '/rate')
+api.add_resource(List, '/api/list')
+api.add_resource(Delete, '/api/delete')
+api.add_resource(Rate, '/api/rate')
 
 
-# # For testing only: for static content
-# @app.route('/<path:filename>')
-# def send_pic(filename):
-# 	return send_from_directory('../www', filename)
-
-
-# # For testing only: for static content
-# @app.route('/<path:filename>')
-# def send_pic(filename):
-# 	return send_from_directory('../www', filename)
-
-
-# # For testing only: for static content
-# @app.route('/<path:filename>')
-# def send_pic(filename):
-# 	return send_from_directory('../www', filename)
+# For testing only: for static content
+@app.route('/<path:filename>')
+def send_pic(filename):
+	return send_from_directory('../www', filename)
 
 app.secret_key = ')zq3jg3*3+*32=i$qcdp2(p#k_$!5y_0ridku3i(g&7mql+xqv'
 

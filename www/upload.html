@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>MyTube</title>
+
+    <!-- Styles -->
+    <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet">
+    <style>
+		body {
+			padding-top: 60px;
+		}
+    </style>
+</head>
+
+<body>
+  
+    <div class="navbar navbar-inverse navbar-fixed-top">
+		<div class="navbar-inner">
+			<div class="container">
+				<button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+				<a class="brand" href="#">MyTube Videos</a>
+				<div class="nav-collapse collapse pull-right">
+					<ul class="nav">
+						<li><a href="./list?order=rating&amp;direction=desc">Popular</a></li>
+						<li class="active"><a href="/upload">Upload</a></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+    </div>
+
+    <div class="container">
+		<form method="POST" enctype="multipart/form-data" action="/api/upload">
+			<fieldset>
+				<legend>Upload Clip</legend>
+				<label for="title">Title</label><input type="text" name="title" id="title" />
+				<label for="description">Description</label><textarea name="description" id="description"></textarea>
+				<label for="title">File to upload:</label><input id="file" name="file" type="file">
+				<span class="help-block">Only video files may be uploaded.</span>
+				<br/> 
+				<input type="submit" class="btn btn-success" value="Upload File"> 
+			</fieldset>
+		</form> 
+    </div>
+
+	<!-- Scripts -->
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	<script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
+	<script src="js/script.js"></script>
+	<script>
+	$(document).ready(function(){
+		// Only allows files with /video mimetypes to be uploaded
+		form = document.getElementById('s3_upload_form');
+		form.addEventListener('submit', function(e) {
+			var mimetype = document.getElementById('file').files[0].type;
+			if (!(/^video\/.+$/).test( mimetype )) {
+				alert("Only videos may be uploaded.");
+				e.preventDefault();
+			}
+		}, false);
+	});	
+	</script>
+	
+</body>
+</html>
