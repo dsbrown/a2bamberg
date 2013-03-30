@@ -113,6 +113,15 @@ def start_web_server():
 		sudo('mkdir -p /var/log/uwsgi') 
 		sudo('chmod 777 /var/log/uwsgi')
 
+		# Need to kill old uwsgi in order for it to pick up changes
+		try:
+			#sudo('ps aux | less')
+			#sudo('kill -HUP `cat /var/log/uwsgi/mytube.log`')
+			sudo('killall -v /home/ubuntu/tube/bin/uwsgi')
+		except:
+			pass
+
+		# start new uwsgi
 		run('/home/ubuntu/tube/bin/uwsgi -s :8801 --module api --callable app --chdir /home/ubuntu/tube --home /home/ubuntu/tube --daemonize=/var/log/uwsgi/mytube.log')
 
 		# Note: Either a port or a socket file may be used for the --s option.  Socket file requires 

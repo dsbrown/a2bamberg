@@ -10,7 +10,7 @@ def distribute(s3_url):
 	rs = c.get_all_streaming_distributions()
 	try:
 		ds = rs[0]
-		distro = ds.get_streaming_distribution()
+		distro = ds.get_distribution()
 	except IndexError:
 		origin = '{}.s3.amazonaws.com'.format(config['aws-bucket-name'])
 		s3_origin = S3Origin(dns_name=origin)
