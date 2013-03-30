@@ -39,27 +39,57 @@
 
     <div class="container">
 
-		<h2>{{ name }}</h2>
-		<div>
-			<video id="s3_video" class="video-js vjs-default-skin" controls width="640" height="400" preload="auto">
-			  <source type="video/mp4" src="{{ s3_url }}">
-			</video>
-		</div>
-		<div>
-			<video id="s3_video" class="video-js vjs-default-skin" controls width="640" height="400" preload="auto">
-			  <source type="video/mp4" src="{{ streaming_url }}">
-			</video>
-		</div>
-		<div>
-			<a href="{{ s3_url }}">Download video</a>
-		</div>
+		<fieldset>
+			<legend>{{ name }}</legend>
+			
+			<span class="help-block">The video below will stream from Cloudfront when on a desktop computer, and will download when on a mobile device.</span>
+
+			<label>S3 Url</label>
+			<span class="input-xlarge uneditable-input" style="width: 100%">{{ s3_url }}</span>
+			<label>Streaming Url</label>
+			<span class="input-xlarge uneditable-input" style="width: 100%">{{ streaming_url }}</span>
+
+			<h3>Hybrid Streaming/Download Player</h3>
+			<div id="video"></div>
+
+			<h3>Download Player</h3>
+			<div>
+				<video id="s3_video" class="video-js vjs-default-skin" controls width="640" height="400" preload="auto">
+				  <source type="video/mp4" src="{{ s3_url }}">
+				</video>
+			</div>
+			
+			<h3>Streaming Player</h3>
+			<div>
+				<video id="s3_video" class="video-js vjs-default-skin" controls width="640" height="400" preload="auto">
+				  <source type="video/mp4" src="{{ streaming_url }}">
+				</video>
+			</div>
+
+		</fieldset>
 	  
     </div>
 
 	<!-- Scripts -->
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 	<script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
+	<script src="//cdn.jsdelivr.net/jwplayer/6/jwplayer.js"></script>
 	<script src="/js/script.js"></script>
-	
+	<script>
+		jwplayer('video').setup({
+		    playlist: [{
+		        //image: "/assets/myVideo.jpg",
+		        sources: [{ 
+		        	file: "rtmp://s2zoibkc9tcgzv.cloudfront.net/cfx/st/mp4:happy_cats_4.mp4"//"{{ streaming_url }}".replace('cfx/st','cfx/st/mp4')
+		            //file: "rtmp://example.com/application/mp4:myVideo.mp4"
+		        },{
+		            file: "{{ s3_url }}"
+		        }]
+		    }],
+		    height: 360,
+		    primary: "flash",
+		    width: 640
+		});
+	</script>
 </body>
 </html>

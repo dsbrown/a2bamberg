@@ -31,9 +31,11 @@ upload_route = ''
 if __name__ == '__main__':
 	# if in development
 	upload_route = '/api/upload'
+	video_template = 'video.html'
 else:
 	# if in production
 	upload_route = '/upload'
+	video_template = 'templates/video.html'
 
 # Database configuration
 rds_url = "assignment2.cqs9bki9xts5.us-east-1.rds.amazonaws.com"
@@ -68,7 +70,7 @@ class List(Resource):
 		else:
 			for vid in vids:
 				if vid['id'] == id:
-					return make_response(render_template('templates/video.html', 
+					return make_response(render_template(video_template, 
 															s3_url=vid['s3_url'], 
 															name=vid['name'],
 															streaming_url=vid['streaming_url']))
