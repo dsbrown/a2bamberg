@@ -25,14 +25,14 @@ conn_rds = boto.rds.connect_to_region("us-east-1")
 conn_ec2 = boto.ec2.connect_to_region("us-east-1")
 
 
-# Removes any existing EC2 or RDS pieces
-def clean():
-	aws_rds.delete_rds(conn_rds, db_name)
-	try:
-		aws_ec2.delete_security_group(conn_ec2, ec2_security_group_name)
-	except:
-		print 'Unable to delete security group. Not all instances shut down.  Please manually terminate any EC2 instances that use the security group ' + ec2_security_group_name + '.'
-	aws_ec2.delete_key_pair(conn_ec2, ec2_key_name)
+# # Removes any existing EC2 or RDS pieces
+# def clean():
+# 	aws_rds.delete_rds(conn_rds, db_name)
+# 	try:
+# 		aws_ec2.delete_security_group(conn_ec2, ec2_security_group_name)
+# 	except:
+# 		print 'Unable to delete security group. Not all instances shut down.  Please manually terminate any EC2 instances that use the security group ' + ec2_security_group_name + '.'
+# 	aws_ec2.delete_key_pair(conn_ec2, ec2_key_name)
 
 
 # Creates RDS database
@@ -65,24 +65,20 @@ def install_prerequisites():
 		sudo('apt-get update')
 
 		# install python
-		sudo('apt-get -y install build-essential python-dev python-setuptools mysql-client nginx git')
-		sudo('easy_install pip')
+		sudo('apt-get -y install nginx')
+		sudo('service nginx start')
+		sudo('apt-get -y install build-essential python-dev python-setuptools mysql-client git')
+		# sudo('easy_install pip') # this is installed when require.python.virtualenv is called
 
-		# install web server
-		sudo('pip install uwsgi virtualenvwrapper') # this actually does have to be run outside of a virtualenv, so the config files are installed to system locations
-		put('server-bash-profile','~/.bashrc')
-
-		# copy python files over into virtual env
-		require.python.virtualenv('tube')
+		# # copy python files over into virtual env
+		require.python.virtualenv('/home/ubuntu/tube')
 		put('../tube/*.py','~/tube')
 		put('../tube/*.json','~/tube')
+		run('mkdir -p ~/tube/templates')
+		put('../tube/templates','~/tube/templates')
 		put('../tube/requirements.txt','~/tube/requirements.txt')
-		#sudo('pip install -r ~/tube/requirements.txt')
-		sudo('pip install flask flask-uploads')
 		with virtualenv('/home/ubuntu/tube'):
-		 	require.python.requirements('~/tube/requirements.txt')
-			# require.python.package('flask')
-			# require.python.package('flask-uploads')
+			require.python.requirements('~/tube/requirements.txt')
 
 		# copy static files to static site directory
 		run('mkdir -p ~/tube/www')
@@ -98,45 +94,57 @@ def start_web_server():
 	print 'Starting server on: ' + load_env()['ec2_url']
 	with settings(host_string = 'ubuntu@' + load_env()['ec2_url'],key_filename = os.path.expanduser('~/.ssh/' + ec2_key_name + '.pem')):
 
-		# start up web server
-		put('nginx-config-file','/etc/nginx/sites-available/default', use_sudo=True)
-		put('/home/matt/.boto','/home/ubuntu/.boto', use_sudo=True)
-		sudo('chmod 777 /tmp/uwsgi.sock')
-		sudo('/etc/init.d/nginx restart')
-		print 'Server starting on ' + load_env()['ec2_url']
+		# put web server settings
+		put('nginx.conf','/etc/nginx/nginx.conf', use_sudo=True)
+		put('sites-available-default','/etc/nginx/sites-available/default', use_sudo=True)
+		sudo('rm /etc/nginx/sites-enabled/default')
+		sudo('ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default')
 
-		with virtualenv('/home/ubuntu/tube'):
-			run('uwsgi -s /tmp/uwsgi.sock --module api --callable app --chdir /home/ubuntu/tube --home /home/ubuntu/tube')
+		# start web server (stopping and restarting it once to make sure settings take effect)
+		sudo('service nginx start')
+		sudo('service nginx stop')
+		sudo('service nginx start')
 
-			# # stop web server if running
-			# try:
-			# 	run('uwsgi --stop /tmp/project-master.pid')
-			# except:
-			# 	pass
+		# set permissions on temp folder so files can be uploaded.  In the python code this is 
+		# specified as the temporary folder.
+		sudo('chmod 777 /tmp')
 
-			# with cd('~/tube'):
-			# 	run('uwsgi -s /tmp/uwsgi.sock --module api --callable app &')
-			# 	# run('uwsgi --http :8035 --static-check=~/tube/www --wsgi-file api.py --callable app --processes 4 --threads 2')
+		# make logging directory and set permissions so it can be written to
+		sudo('mkdir -p /var/log/uwsgi') 
+		sudo('chmod 777 /var/log/uwsgi')
+
+		run('/home/ubuntu/tube/bin/uwsgi -s :8801 --module api --callable app --chdir /home/ubuntu/tube --home /home/ubuntu/tube --daemonize=/var/log/uwsgi/mytube.log')
+
+		# Note: Either a port or a socket file may be used for the --s option.  Socket file requires 
+		# that its permissions be set so it is readable by the web server username attempting to access it.
+
+		# run('/home/ubuntu/tube/bin/uwsgi -s /tmp/uwsgi.sock --module api --callable app --chdir /home/ubuntu/tube --home /home/ubuntu/tube')
+
+		# to run as background process, use command: --daemonize=/var/log/uwsgi/mytube.log
+
+		# put('/home/matt/.boto','/home/ubuntu/.boto', use_sudo=True)
+		# sudo('chmod 777 /tmp/uwsgi.sock')
+
+		# print 'Server starting on ' + load_env()['ec2_url']
+
+		# with cd('~/tube'):
+		# 	run('uwsgi -s /tmp/uwsgi.sock --module api --callable app &')
+		# 	# run('uwsgi --http :8035 --static-check=~/tube/www --wsgi-file api.py --callable app --processes 4 --threads 2')
 
 
-def restart_nginx():
+def log():
 	with settings(host_string = 'ubuntu@' + load_env()['ec2_url'],key_filename = os.path.expanduser('~/.ssh/' + ec2_key_name + '.pem')):
-		# sudo('/etc/init.d/nginx restart')
-		sudo('ls /var/log/nginx')
-		sudo('more /var/log/nginx/access.log')
 
-
-def remove_site():
-	with settings(host_string = 'ubuntu@' + load_env()['ec2_url'],key_filename = os.path.expanduser('~/.ssh/' + ec2_key_name + '.pem')):
-		with cd('~/tube'):
-			try:
-				sudo('rmvirtualenv tube')
-			except:
-				pass
-			try:
-				sudo('rm ~/tube -r')
-			except:
-				pass
+		# run("ifconfig eth0 | grep inet | awk '{ print $2 }'")
+		#sudo('more /var/log/nginx/error.log')
+		#sudo('more /var/log/uwsgi/error.log')
+		sudo('more /var/log/uwsgi/python.log')
+		# sudo('more /etc/nginx/sites-enabled/default')
+		# sudo('wget http://ec2-50-19-167-137.compute-1.amazonaws.com/index.html')
+		# sudo('netstat -nao | grep 80')
+		# sudo("ps aux | egrep '(PID|nginx)'")
+		# sudo("/etc/init.d/nginx restart")
+		# sudo("kill -QUIT $( cat /var/run/nginx.pid )")
 
 
 def set_rds_url(rds_url):
@@ -168,8 +176,8 @@ def save_env(env):
 	pickle.dump(env, open(settings_file, "wb"))
 
 
-# Test creating a sql database
-def test_sql():
+# Create a sql database after the RDS instance is live
+def create_sql_database():
 	if (load_env()['rds_url'] == None):
 		raise exception.Exception('Error: "rds_url" has not yet been set. Please run "fab create_rds" to create the RDS database.')
 
@@ -206,14 +214,3 @@ def test_sql():
 
 	conn.commit() # commit() necessary, or changes are not saved
 	conn.close()
-
-
-
-# EXAMPLE FABRIC/CUSINE CODE
-# @hosts('host1')
-# def clean_and_upload():
-#     local('find assets/ -name "*.DS_Store" -exec rm '{}' \;')
-#     local('tar czf /tmp/assets.tgz assets/')
-#     put('/tmp/assets.tgz', '/tmp/assets.tgz')
-#     with cd('/var/www/myapp/'):
-#         run('tar xzf /tmp/assets.tgz')

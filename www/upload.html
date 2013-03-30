@@ -26,11 +26,11 @@
 					<span class="icon-bar"></span>
 					<span class="icon-bar"></span>
 				</button>
-				<a class="brand" href="./index.html">MyTube Videos</a>
+				<a class="brand" href="/index.html">MyTube Videos</a>
 				<div class="nav-collapse collapse pull-right">
 					<ul class="nav">
-						<li><a href="./index.html">Popular</a></li>
-						<li class="active"><a href="./upload.html">Upload</a></li>
+						<li><a href="/index.html">Popular</a></li>
+						<li class="active"><a href="/api/upload">Upload</a></li>
 					</ul>
 				</div>
 			</div>
@@ -38,7 +38,7 @@
     </div>
 
     <div class="container">
-		<form method="POST" enctype="multipart/form-data" action="/api/upload">
+		<form id="upload_form" method="POST" enctype="multipart/form-data" action="/api/upload">
 			<fieldset>
 				<legend>Upload Clip</legend>
 				<label for="name">Title</label><input type="text" name="name" id="name" />
@@ -54,12 +54,13 @@
 	<!-- Scripts -->
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 	<script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
-	<script src="js/script.js"></script>
+	<script src="/js/script.js"></script>
 	<script>
 	$(document).ready(function(){
 		// Only allows files with /video mimetypes to be uploaded
-		form = document.getElementById('s3_upload_form');
+		form = document.getElementById('upload_form');
 		form.addEventListener('submit', function(e) {
+			console.log(document.getElementById('file').files[0]);
 			var mimetype = document.getElementById('file').files[0].type;
 			if (!(/^video\/.+$/).test( mimetype )) {
 				alert("Only videos may be uploaded.");

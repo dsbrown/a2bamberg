@@ -8,6 +8,7 @@ import boto
 import json
 import os
 import exceptions
+import logging
 
 from flask import flash, Flask, request, jsonify, redirect, render_template, send_from_directory, make_response
 from flask.ext.restful import Resource, Api, abort, reqparse
@@ -17,9 +18,22 @@ from flaskext.uploads import configure_uploads, UploadSet, UploadNotAllowed
 app = Flask(__name__)
 api = Api(app)
 
+# Enable logging (puts all python errors into this file)
+file_handler = logging.FileHandler('/var/log/uwsgi/python.log')
+app.logger.addHandler(file_handler) # hook logger up to Flask
+app.logger.setLevel(logging.DEBUG)
+
 # For cloudfront
 config = json.load( open('config.json') )
 s3_bucket_name = config['aws-bucket-name']
+
+upload_route = ''
+if __name__ == '__main__':
+	# if in development
+	upload_route = '/api/upload'
+else:
+	# if in production
+	upload_route = '/upload'
 
 # Database configuration
 rds_url = "assignment2.cqs9bki9xts5.us-east-1.rds.amazonaws.com"
@@ -50,11 +64,11 @@ class List(Resource):
 	def get(self, id=None):
 		vids = rds.get_videos()
 		if not id:
-			return sorted(vids, key=lambda vid: vid['timestamp'], reverse=True)
+			return sorted(vids, key=lambda vid: vid['rating'], reverse=True)
 		else:
 			for vid in vids:
 				if vid['id'] == id:
-					return make_response(render_template('video.html', 
+					return make_response(render_template('templates/video.html', 
 															s3_url=vid['s3_url'], 
 															name=vid['name'],
 															streaming_url=vid['streaming_url']))
@@ -62,7 +76,7 @@ class List(Resource):
 		redirect('/index.html')
 
 
-@app.route('/api/upload', methods=['POST', 'GET'])
+@app.route(upload_route, methods=['POST', 'GET'])
 def upload():
 	'''Upload a new video.'''
 	if request.method == 'POST':
@@ -70,14 +84,14 @@ def upload():
 		name = request.form.get('name')
 		if not (video and name):
 			flash("You must fill in all the fields")
-			return render_template('upload.html')
+			return redirect('/upload.html')
 		else:
 			try:
 				filename = videos.save(video)  # flask writes the video to disk
 				filepath = os.path.join(app.config['UPLOADED_VIDEOS_DEST'], filename)
 			except UploadNotAllowed:
 				flash("Only videos are allowed.")
-				return render_template('upload.html')
+				return redirect('/upload.html')
 			else:
 				s3_url = s3.upload(filepath)
 				cloudfront_url = cloudfront.distribute(s3_url=s3_url)
@@ -86,10 +100,10 @@ def upload():
 					return redirect('/index.html')
 				except IntegrityError as err:
 					flash("Duplicate video title. Try again.")
-					return render_template('upload.html')
+					return redirect('/upload.html')
 				    
 	elif request.method == 'GET':
-		return render_template('upload.html')
+		return redirect('/upload.html')
 
 
 class Rate(Resource):
@@ -109,21 +123,25 @@ class Delete(Resource):
 		rds.delete_video(video_id=id)
 		key_name = vid['s3_url'].split('/')[-1]
 		s3.delete(key_name=key_name)
-		return render_template('index.html')
+		return 'Success'
 
-
-# The entire python app is hosted under the /api directory, so the full url
-# of these will be similar to: /api/list, and /api/upload/success
-api.add_resource(List, '/api/list', '/api/list/', '/api/list/<int:id>')
-api.add_resource(Delete, '/api/delete/<int:id>')
-api.add_resource(Rate, '/api/rate')
 
 # For testing only: for static content
 @app.route('/<path:filename>')
-def send_pic(filename):
+def static_files(filename):
 	return send_from_directory('../www', filename)
 
 app.secret_key = ')zq3jg3*3+*32=i$qcdp2(p#k_$!5y_0ridku3i(g&7mql+xqv'
 
 if __name__ == '__main__':
+	# Enables paths in Development (which it is being run by 'python api.py')
+	api.add_resource(List, '/api/list', '/api/list/', '/api/list/<int:id>')
+	api.add_resource(Delete, '/api/delete/<int:id>')
+	api.add_resource(Rate, '/api/rate')
+	# run development server
 	app.run('0.0.0.0', debug=True, port=5000)
+else:
+	# Enables routes in production
+	api.add_resource(List, '/list', '/list/', '/list/<int:id>')
+	api.add_resource(Delete, '/delete/<int:id>')
+	api.add_resource(Rate, '/rate')

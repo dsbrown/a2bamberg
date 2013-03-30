@@ -1,13 +1,18 @@
 # File: /etc/nginx/sites-available/default
 # And make sure there is a symbolic link to this file in: /etc/nginx/sites-enabled/default
 server {
-	listen 80;
-	root /home/ubuntu/tube/www;
-	index index.htm index.html;
+	listen 80 default;
+	server_name amazonaws.com;
+	index index.html;
+	error_log /var/log/nginx/error.log;
+	access_log  /var/log/nginx/access.log;
+
+	# allow large uploads (i.e. videos)
+	client_max_body_size 20m;
 
 	# Static content site (location already specified by 'root' above)
 	location / { 
-
+		alias /home/ubuntu/tube/www/;
 	}
 
 	# Python Api Site
@@ -17,7 +22,10 @@ server {
 		include uwsgi_params;
 		uwsgi_param SCRIPT_NAME /app;
 		uwsgi_modifier1 30;
-		uwsgi_pass unix:/tmp/uwsgi.sock;
+		uwsgi_pass 127.0.0.1:8801;
+		uwsgi_read_timeout 1000;
+		client_max_body_size 20m;
+		# uwsgi_pass unix:/tmp/uwsgi.sock;
 	}
 
 	# Notes on getting UWSGI to work with NGINX

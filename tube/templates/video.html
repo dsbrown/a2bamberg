@@ -39,33 +39,27 @@
 
     <div class="container">
 
-		<h1>{{ name }}</h1>
-		<table id="videos" style="width: 600px;" class="table table-hover">
-			<thead>
-			</thead>
-			<tbody>
-				<tr>
-					<video id="s3_video" class="video-js vjs-default-skin" controls width="640" height="400" preload="auto">
-					  <source type="video/mp4" src="{{ s3_url }}">
-					</video>
-				</tr>
-				<tr>
-					<video id="s3_video" class="video-js vjs-default-skin" controls width="640" height="400" preload="auto">
-					  <source type="video/mp4" src="{{ streaming_url }}">
-					</video>
-				</tr>
-				<tr>
-					<a href="{{ s3_url }}">Download video</a>
-				</tr>
-			</tbody>
-		</table>
+		<h2>{{ name }}</h2>
+		<div>
+			<video id="s3_video" class="video-js vjs-default-skin" controls width="640" height="400" preload="auto">
+			  <source type="video/mp4" src="{{ s3_url }}">
+			</video>
+		</div>
+		<div>
+			<video id="s3_video" class="video-js vjs-default-skin" controls width="640" height="400" preload="auto">
+			  <source type="video/mp4" src="{{ streaming_url }}">
+			</video>
+		</div>
+		<div>
+			<a href="{{ s3_url }}">Download video</a>
+		</div>
 	  
     </div>
 
 	<!-- Scripts -->
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 	<script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
-	<script src="js/script.js"></script>
+	<script src="/js/script.js"></script>
 	
 </body>
 </html>
